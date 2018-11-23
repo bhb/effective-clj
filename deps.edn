@@ -1,0 +1,19 @@
+{:paths ["src"]
+ :aliases {
+           ;; clj -A:server
+           :server {:extra-paths ["src/clj"]
+                    :extra-deps {
+                                 metosin/reitit-core {:mvn/version "0.2.9"}
+                                 metosin/reitit-ring {:mvn/version "0.2.9"}
+                                 http-kit {:mvn/version "2.2.0"}
+                                 }
+                    :main-opts ["-m" "server"]
+                    }
+           
+           ;; clj -A:lint:lint/fix
+           :lint {:extra-deps {com.jameslaverack/cljfmt-runner
+                               {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
+                                :sha "97960e9a6464935534b5a6bab529e063d0027128"}}
+                  :main-opts ["-m" "cljfmt-runner.check"]}
+           :lint/fix {:main-opts ["-m" "cljfmt-runner.fix"]}
+           }}
