@@ -1,5 +1,9 @@
 {:paths ["src"]
  :aliases {
+           ;; clj -A:client -m figwheel.main
+           :client {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.1.9"}
+                                 }}
+           :rebel {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}}
            ;; clj -A:server
            :server {:extra-paths ["src/clj"]
                     :extra-deps {

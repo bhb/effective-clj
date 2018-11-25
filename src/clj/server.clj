@@ -25,7 +25,7 @@
 (defn start []
   (let [port 3333]
     (httpkit/run-server app {:port port})
-    (println "server running on port " port)))
+    (println "server running on port" port)))
 
 (defn -main []
   (start))

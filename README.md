@@ -8,6 +8,25 @@ Bio: Ben has written code professionally for over a decade, working on projects 
 
 ## Usage
 
+### Client REPL
+
+#### Terminal
+
+`clj -A:client:rebel -m figwheel.main`
+
+#### inf-clojure
+
+1. Terminal: `clj -A:client -J-Dclojure.server.repl="{:port 5555 :accept clojure.core.server/repl}"`
+1. Emacs: `M-x inf-clojure-connect`
+1. Choose localhost and 5555
+1. In Emacs REPL: `(require '[figwheel.main.api])`
+1. In Emacs REPL: `(figwheel.main.api/start "dev")`
+1. In Emacs buffer (unless you already have `inf-clojure` set to autoload): `M-x inf-clojure-minor-mode`
+
+
+
+
+
 ### Server
 
 `clj -A:server`
