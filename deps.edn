@@ -1,23 +1,15 @@
 {:paths ["src"]
- :aliases {
-           ;; clj -A:client -m figwheel.main
-           :client {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.1.9"}
-                                 }}
+ :aliases {;; clj -A:client -m figwheel.main
+           :client {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.1.9"}}}
            :rebel {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}}
            ;; clj -A:server
            :server {:extra-paths ["src/clj"]
-                    :extra-deps {
-                                 metosin/reitit-core {:mvn/version "0.2.9"}
-                                 metosin/reitit-ring {:mvn/version "0.2.9"}
-                                 http-kit {:mvn/version "2.2.0"}
-                                 }
-                    :main-opts ["-m" "server"]
-                    }
-           
+                    :extra-deps {ring/ring-core {:mvn/version "1.7.1"}
+                                 http-kit {:mvn/version "2.2.0"}}
+                    :main-opts ["-m" "server"]}
            ;; clj -A:lint:lint/fix
            :lint {:extra-deps {com.jameslaverack/cljfmt-runner
                                {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
                                 :sha "97960e9a6464935534b5a6bab529e063d0027128"}}
                   :main-opts ["-m" "cljfmt-runner.check"]}
-           :lint/fix {:main-opts ["-m" "cljfmt-runner.fix"]}
-           }}
+           :lint/fix {:main-opts ["-m" "cljfmt-runner.fix"]}}}

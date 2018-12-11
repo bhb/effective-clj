@@ -23,10 +23,6 @@ Bio: Ben has written code professionally for over a decade, working on projects 
 1. In Emacs REPL: `(figwheel.main.api/start "dev")`
 1. In Emacs buffer (unless you already have `inf-clojure` set to autoload): `M-x inf-clojure-minor-mode`
 
-
-
-
-
 ### Server
 
 `clj -A:server`
