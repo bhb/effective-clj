@@ -38,13 +38,21 @@
 
 
 (defn handler [response]
-  (prn "hi")
+  (prn "hello")
   #_(prn response)
   #_(prn (js->clj response))
   )
 
+(defn error-handler [{:keys [status status-text]}]
+  (prn (str "something bad happened: " status " " status-text))
+  #_(.log js/console ))
+
+
 (comment
-  (http/GET "http://localhost:3333/symbol" {:handler handler})
+  (http/GET "http://localhost:3333/symbol" {:handler handler
+                                            :error-handler error-handler
+                                            :params {:name "google"}
+                                            })
 
   )
 
