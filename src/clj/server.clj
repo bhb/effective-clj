@@ -12,10 +12,12 @@
       "/symbol"
       (if-let [stock-symbol (get company-name->symbol name)]
         {:status  200
-         :headers {"Content-Type" "text/plain"}
+         :headers {"Content-Type" "text/plain"
+                   "Access-Control-Allow-Origin" "*"}
          :body    stock-symbol}
         {:status  404
-         :headers {"Content-Type" "text/plain"}
+         :headers {"Content-Type" "text/plain"
+                   "Access-Control-Allow-Origin" "*"}
          :body    (str "No symbol found for " name)})
 
       {:status 404

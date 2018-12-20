@@ -1,6 +1,10 @@
-(ns client)
+(ns cljs.client
+  (:require
+    [devtools.core :as devtools]
+    [ajax.core :as http])
+  )
 
-(js/alert "hi")
+(devtools/install!)
 
 ;; Effect-ive Clojure
 
@@ -32,6 +36,17 @@
 (baz {} {})
 
 
+
+(defn handler [response]
+  (prn "hi")
+  #_(prn response)
+  #_(prn (js->clj response))
+  )
+
+(comment
+  (http/GET "http://localhost:3333/symbol" {:handler handler})
+
+  )
 
 ;; Example - getting stock price via symbol or ticker
 

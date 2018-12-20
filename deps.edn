@@ -1,6 +1,9 @@
 {:paths ["src"]
  :aliases {;; clj -A:client -m figwheel.main
-           :client {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.1.9"}}}
+           :client {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.439"}
+                                 com.bhauman/figwheel-main {:mvn/version "0.1.9"}
+                                 cljs-ajax {:mvn/version "0.8.0"}
+                                 binaryage/devtools {:mvn/version "0.9.10"}}}
            :rebel {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}}
            ;; clj -A:server
            :server {:extra-paths ["src/clj"]

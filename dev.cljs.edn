@@ -1,2 +1,2 @@
-^{:watch-dirs ["src/cljs"]}
-{:main client}
+^{:watch-dirs ["src"]}
+{:main cljs.client}
