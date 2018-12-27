@@ -1,8 +1,7 @@
 (ns cljs.client
   (:require
-    [devtools.core :as devtools]
-    [ajax.core :as http])
-  )
+   [devtools.core :as devtools]
+   [ajax.core :as http]))
 
 (devtools/install!)
 
@@ -35,26 +34,19 @@
 
 (baz {} {})
 
-
-
 (defn handler [response]
-  (prn "hello")
-  #_(prn response)
-  #_(prn (js->clj response))
-  )
+  (prn response))
 
 (defn error-handler [{:keys [status status-text]}]
-  (prn (str "something bad happened: " status " " status-text))
-  #_(.log js/console ))
-
+  (prn (str "something bad happened: " status " " status-text)))
 
 (comment
   (http/GET "http://localhost:3333/symbol" {:handler handler
                                             :error-handler error-handler
-                                            :params {:name "google"}
-                                            })
+                                            :params {:name
 
-  )
+
+                                                     "google"}}))
 
 ;; Example - getting stock price via symbol or ticker
 
