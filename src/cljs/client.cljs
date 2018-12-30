@@ -29,10 +29,11 @@
 (defn baz [m1 m2]
   (-> m1
       (into m2)
-      (assoc :count (+ (count m1)
-                       (count m2)))))
+      (assoc :total-keys (+ (count m1)
+                            (count m2)))))
 
 (baz {} {})
+(baz {:x 1} {:y 2})
 
 (defn handler [response]
   (prn response))
@@ -43,12 +44,33 @@
 (comment
   (http/GET "http://localhost:3333/symbol" {:handler handler
                                             :error-handler error-handler
-                                            :params {:name
+                                            :params {:name "google"}})
+  
+  )
+
+;; Simple case - need something that will involve up front computation
+;; for HTTP case with several cases.
+
+;; Simple case - if you provide date, will look up stock price at date,
+;; otherwise looks up price for today?
+
+;; Slightly more complicated case - date range (sends multiple parallel requests).
+
+;; function would take in today's date, today date,
 
 
-                                                     "google"}}))
+;; server has one endpoint that takes stock symbol and date and returns
+;; price.
 
-;; Example - getting stock price via symbol or ticker
+;; stock symbol must be present, must be uppercase,
+
+
+
+
+
+
+
+
 
 
 
