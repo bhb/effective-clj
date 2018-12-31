@@ -1,7 +1,8 @@
 (ns cljs.client
   (:require
    [devtools.core :as devtools]
-   [ajax.core :as http]))
+   [ajax.core :as http]
+   [clojure.string :as string]))
 
 (devtools/install!)
 
@@ -58,11 +59,42 @@
 
 ;; function would take in today's date, today date,
 
-
 ;; server has one endpoint that takes stock symbol and date and returns
 ;; price.
 
 ;; stock symbol must be present, must be uppercase,
+;; if symbol is not provided, return nil
+;; if price not found, return nil
+
+(defn today []
+  (let [t (js/Date.)
+        dd (.getDate t)
+        dd (if (< dd 10) (str "0" dd) dd)
+        mm (inc (.getMonth t))
+        mm (if (< mm 10) (str "0" mm) mm)
+        yyyy (.getFullYear t)
+        ]
+    (str yyyy "-" mm "-" dd)))
+
+
+;; TODO - make sure date is formatted correctly with -
+(defn get-price [date symbol cb]
+  (let [d (or date (today))]
+    (if symbol
+      (http/GET "http://localhost:3333/price" {:handler (fn [response] (cb response))
+                                               :error-handler (fn [response] (cb nil))
+                                               :params {:symbol (-> symbol string/upper-case string/trim)
+                                                        :date date}})
+      (cb nil))))
+
+(comment
+  (get-price "2018-12-28" "GOOGL" (fn [x] (prn x)))
+  (get-price "2018/12/28" "googl" (fn [x] (prn x)))
+
+  
+  )
+
+
 
 
 
