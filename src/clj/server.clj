@@ -8,7 +8,9 @@
 ;; opening prices
 (def symbol->date->price
   {"GOOGL" {"2018-12-28" 1059.50
-            "2018-12-27" 1052.90}})
+            "2018-12-27" 1052.90
+            "2018-12-26" 1051.10
+            "2018-12-25" 1060.01}})
 
 (defn app* [req]
   (let [{:keys [uri query-params]} req
