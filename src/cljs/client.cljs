@@ -45,9 +45,7 @@
 (comment
   (http/GET "http://localhost:3333/symbol" {:handler handler
                                             :error-handler error-handler
-                                            :params {:name "google"}})
-  
-  )
+                                            :params {:name "google"}}))
 
 ;; Simple case - need something that will involve up front computation
 ;; for HTTP case with several cases.
@@ -66,93 +64,85 @@
 ;; if symbol is not provided, return nil
 ;; if price not found, return nil
 
+
 (defn today []
   (let [t (js/Date.)
         dd (.getDate t)
         dd (if (< dd 10) (str "0" dd) dd)
         mm (inc (.getMonth t))
         mm (if (< mm 10) (str "0" mm) mm)
-        yyyy (.getFullYear t)
-        ]
+        yyyy (.getFullYear t)]
     (str yyyy "-" mm "-" dd)))
-
 
 (defn get-price [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
-              {:handler (fn [response]
-                          (prn [:response response])
-                          (cb
-                           (-> response
-                               (string/replace " USD" "")
-                               js/parseFloat)))
-               :error-handler (fn [response] (eb response))
-               :params {:symbol (-> symbol string/upper-case string/trim)
-                        :date (-> (or date (today)) string/trim (string/replace #"/" "-"))}})
+      {:handler (fn [response]
+                  (cb
+                   (-> response
+                       (string/replace " USD" "")
+                       js/parseFloat)))
+       :error-handler (fn [response] (eb response))
+       :params {:symbol (-> symbol string/upper-case string/trim)
+                :date (-> (or date (today)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
 
 (comment
-  (get-price "2018-12-28" "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x])))
-  )
+  (get-price "2018-12-28" "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x]))))
 
-(defn price-req [date today symbol cb eb]
+(defn price-req [date today symbol]
   (if symbol
     {:action :get
      :url "http://localhost:3333/price"
      :handler (fn [response]
-                (cb
-                 (-> response
-                     (string/replace " USD" "")
-                     js/parseFloat)))
-     :error-handler (fn [response]
-                      (eb response))
+                (-> response
+                    (string/replace " USD" "")
+                    js/parseFloat))
+     :error-handler (fn [response] response)
      :params {:symbol (-> symbol string/upper-case string/trim)
               :date (-> (or date today) string/trim (string/replace #"/" "-"))}}
     {:action :noop}))
 
-(comment
-  (let [p (js/Promise. (fn [resolve reject] (js/setTimeout (fn [] (resolve "foo")) 1000)))]
-    (-> p
-        (.then (fn [x] (prn x)))))
+(defn ok! [x]
+  (prn [:ok x]))
 
-  (let [p (js/Promise. (fn [resolve reject]
-                         (let [req (price-req nil (today) "googl" resolve reject)]
-                           (case (:action req)
-                             :get (http/GET (:url req) req)
-                             :noop (reject nil)))
-                         ))]
-    (-> p
-        (.then (fn [x] (prn x)))
-        (.catch (fn [x] (prn "failed with" x)))
-        )
-    )
-  )
-
+(defn fail! [x]
+  (prn [:fail x]))
 
 (comment
-  (price-req nil "2018-12-29" nil (fn [x] (prn x)) (fn [x] (prn x)))
-  (price-req nil "2018-12-29" "googl" (fn [x] (prn x)) (fn [x] (prn x)))
-  (price-req "2018-12-28" "2018-12-29" "GOOGL" (fn [x] (prn x)) (fn [x] (prn x)))
-  
-  )
+  (price-req nil "2018-12-29" nil)
+  (price-req nil "2018-12-29" "googl")
+  (price-req "2018-12-28" "2018-12-29" "GOOGL")
+
+  (-> (price-req "2018-12-28" "2018-12-29" "GOOGL")
+      (update :handler #(comp ok! %))
+      :handler
+      (apply ["200.1 USD"]))
+
+  (let [response "200.1 USD"]
+    (-> response
+        (string/replace " USD" "")
+        js/parseFloat)))
 
 (defn get-price2 [date symbol cb eb]
-  (let [req (price-req date (today) symbol cb eb)]
+  (let [req (price-req date (today) symbol)]
     (case (:action req)
-      :get (http/GET (:url req) req)
+      :get (let [req' (-> req
+                          (update :handler #(comp cb %))
+                          (update :error-handler #(comp eb %)))]
+             (http/GET (:url req') req'))
       :noop (cb nil))))
 
 (comment
-  (get-price2 "2018-12-28" "GOOGL" (fn [x] (prn x)))
-  (get-price2 "2018/12/28" "googl" (fn [x] (prn x)))
-  )
+  (get-price2 "2018-12-28" "GOOGL" ok! fail!)
+  (get-price2 "2018/12/28" "googl" ok! fail!))
 
 ;;;;;;;;;;;;; independent ;;;;;;;;;;;;;;;;;;;;
+
 
 (defn mean [prices]
   (/ (apply + prices)
      (count prices)))
-
 
 (defn get-prices [dates symbol prices cb eb]
   (if (empty? dates)
@@ -166,15 +156,15 @@
                     symbol
                     (conj prices price)
                     cb
-                    eb
-                    ))
+                    eb))
                  eb))))
 
 (comment
-  (get-prices ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" [] (fn [x] (prn [:done x])))
-  )
+  (get-prices ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" [] (fn [x] (prn [:done x]))))
 
 ;; First attempt: recursion
+
+
 (defn get-mean-price1 [dates symbol cb eb]
   (get-prices dates
               symbol
@@ -184,8 +174,7 @@
               eb))
 
 (comment
-  (get-mean-price1 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x])))
-  )
+  (get-mean-price1 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x]))))
 
 (defn get-price+ [date symbol]
   (js/Promise. (fn [resolve reject]
@@ -193,51 +182,72 @@
                   date
                   symbol
                   resolve
-                  reject
-                  ))))
+                  reject))))
 
 (comment
   (-> (get-price+ "2017-12-26" "GOOGL")
-      (.then (fn [x] (prn [:done x])))
-      )
-  
- 
- )
+      (.then (fn [x] (prn [:done x])))))
 
 ;; Step 1, break into independent effects
-(defn get-mean-price2 [dates symbol cb]
-  (let [])
-  )
 
-;; TODO - show promise version w/ core.async
+(defn get-mean-price2 [dates symbol cb eb]
+  (let [ps (map #(get-price+ % symbol) dates)]
+    (-> (js/Promise.all ps)
+        (.then mean)
+        (.then cb)
+        (.catch eb))))
 
+(comment
+  (get-mean-price2 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x]))))
+
+(defn price-reqs [dates symbol]
+  (->> dates
+       (map #(price-req % nil symbol))
+       (remove #(= :noop (:action %)))))
+
+(comment
+  (price-reqs [] nil)
+  (price-reqs ["2018-12-28"] nil)
+  (price-reqs ["2018-12-28"] "GOOGL"))
+
+(defn request+ [req])
+
+(defn get-price+2 [req]
+  (js/Promise. (fn [resolve reject]
+                 (let [req' (-> req
+                                (update :handler #(comp resolve %))
+                                (update :handler #(comp reject %)))]
+                   (http/GET (:url req') req')))))
+
+(defn get-mean-price3 [dates symbol cb eb]
+  (let [reqs (price-reqs dates symbol)
+        ps (map get-price+2 reqs)]
+    (-> (js/Promise.all ps)
+        (.then mean)
+        (.then cb)
+        (.catch eb))))
+
+(comment
+  (get-mean-price3 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x]))))
+
+(comment
+  (let [p (js/Promise. (fn [resolve reject] (js/setTimeout (fn [] (resolve "foo")) 1000)))]
+    (-> p
+        (.then (fn [x] (prn x)))))
+
+  (let [p (js/Promise. (fn [resolve reject]
+                         (let [req (price-req nil (today) "googl" resolve reject)]
+                           (case (:action req)
+                             :get (http/GET (:url req) req)
+                             :noop (reject nil)))))]
+    (-> p
+        (.then (fn [x] (prn x)))
+        (.catch (fn [x] (prn "failed with" x))))))
 
 #_(defn get-mean-price3 [dates symbol cb]
-  (let [reqs (map
-              #(price-req % nil symbol (fn [resolve reject]
-                                         ()
-                                         ))
-              dates
-              )])
-  
-  (let [p (js/Promise.all [])])
-  )
+    (let [reqs])
 
+    (let [p (js/Promise.all
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+             [])]))
 

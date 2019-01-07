@@ -36,8 +36,7 @@
         {:status  404
          :headers {"Content-Type" "text/plain"
                    "Access-Control-Allow-Origin" "*"}
-         :body    (str "No price found for symbol " symbol " on date " date)}
-        )
+         :body    (str "No price found for symbol " symbol " on date " date)})
       {:status 404
        :body "Not found"})))
 
