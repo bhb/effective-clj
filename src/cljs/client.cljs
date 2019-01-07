@@ -77,18 +77,23 @@
     (str yyyy "-" mm "-" dd)))
 
 
-(defn get-price [date symbol cb]
+(defn get-price [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
               {:handler (fn [response]
+                          (prn [:response response])
                           (cb
                            (-> response
                                (string/replace " USD" "")
                                js/parseFloat)))
-               :error-handler (fn [response] (cb nil))
+               :error-handler (fn [response] (eb response))
                :params {:symbol (-> symbol string/upper-case string/trim)
                         :date (-> (or date (today)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
+
+(comment
+  (get-price "2018-12-28" "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x])))
+  )
 
 (defn price-req [date today symbol cb eb]
   (if symbol
@@ -131,8 +136,8 @@
   
   )
 
-(defn get-price2 [date symbol cb]
-  (let [req (price-req date (today) symbol cb)]
+(defn get-price2 [date symbol cb eb]
+  (let [req (price-req date (today) symbol cb eb)]
     (case (:action req)
       :get (http/GET (:url req) req)
       :noop (cb nil))))
@@ -149,7 +154,7 @@
      (count prices)))
 
 
-(defn get-prices [dates symbol prices cb]
+(defn get-prices [dates symbol prices cb eb]
   (if (empty? dates)
     (cb prices)
     (let [[first-date & rest] dates]
@@ -160,20 +165,54 @@
                     rest
                     symbol
                     (conj prices price)
-                    cb))))))
+                    cb
+                    eb
+                    ))
+                 eb))))
 
 (comment
   (get-prices ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" [] (fn [x] (prn [:done x])))
   )
 
 ;; First attempt: recursion
-(defn get-average-price1 [dates symbol cb]
-  
+(defn get-mean-price1 [dates symbol cb eb]
+  (get-prices dates
+              symbol
+              []
+              (fn [prices]
+                (cb (mean prices)))
+              eb))
+
+(comment
+  (get-mean-price1 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x])))
   )
 
+(defn get-price+ [date symbol]
+  (js/Promise. (fn [resolve reject]
+                 (get-price
+                  date
+                  symbol
+                  resolve
+                  reject
+                  ))))
 
-;; TODO - thread reject into request
-(defn get-average-price2 [dates symbol cb]
+(comment
+  (-> (get-price+ "2017-12-26" "GOOGL")
+      (.then (fn [x] (prn [:done x])))
+      )
+  
+ 
+ )
+
+;; Step 1, break into independent effects
+(defn get-mean-price2 [dates symbol cb]
+  (let [])
+  )
+
+;; TODO - show promise version w/ core.async
+
+
+#_(defn get-mean-price3 [dates symbol cb]
   (let [reqs (map
               #(price-req % nil symbol (fn [resolve reject]
                                          ()
