@@ -2,7 +2,8 @@
   (:require
    [devtools.core :as devtools]
    [ajax.core :as http]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [cljs.reader :as reader]))
 
 (devtools/install!)
 
@@ -247,18 +248,50 @@
 ;; that's the easy bits
 
 ;; 1. given company name, get symbol
-;; 2. given symbol, get price for last three days
-;; 3. given a list of
+;; 2. given symbol, get all prices
+
 
 
 ;; what if API adds API that is multi-read for dates? graphql is example
+;;
+
+;; fundamentally, we have
+;; company -> symbol -> dates -> prices
+
+;; 1. callbacks
+(defn get-low-price [name symbol cb eb]
+  (if name
+    (http/GET "http://localhost:3333/symbol"
+              {:params {:name name}
+               :error-handler eb
+               :handler (fn [symbol]
+                          (http/GET "http://localhost:3333/dates-available"
+                                    {:params {:symbol symbol}
+                                     :error-handler eb
+                                     :handler (fn [dates]
+                                                (let [ps (map #(get-price+ % symbol) dates)]
+                                                  (-> (js/Promise.all ps)
+                                                      (.then #(apply min %))
+                                                      (.then cb)
+                                                      (.catch eb))))
+                                     }))})))
+
+(comment
+  (get-low-price "Google" nil ok! fail!)
+  )
+
+;; first, show the parts that are logic and parts that are effects
+;; to show that it's not trivial to break it out
+;; emphasize we can't trivially use our old trick
+
+;; is the solution tools? show promises?
+
+;; what about abstraction?
+;; show list of questions, maybe not 
 ;; 
 
-(defn get-all-prices [company symbol]
-  (if symbol
-    (js/)
-    )
-  )
+;; abstract into promises 
+
 
 
 

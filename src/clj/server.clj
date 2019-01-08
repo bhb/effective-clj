@@ -1,6 +1,7 @@
 (ns server
   (:require [org.httpkit.server :as httpkit]
-            [ring.middleware.params :refer [wrap-params]]))
+            [ring.middleware.params :refer [wrap-params]]
+            [clojure.string :as string]))
 
 (def company-name->symbol
   {"google" "GOOGL"})
@@ -17,7 +18,7 @@
         {:strs [name symbol date]} query-params]
     (case uri
       "/symbol"
-      (if-let [stock-symbol (get company-name->symbol name)]
+      (if-let [stock-symbol (get company-name->symbol (string/lower-case name))]
         {:status  200
          :headers {"Content-Type" "text/plain"
                    "Access-Control-Allow-Origin" "*"}
