@@ -244,10 +244,24 @@
         (.then (fn [x] (prn x)))
         (.catch (fn [x] (prn "failed with" x))))))
 
-#_(defn get-mean-price3 [dates symbol cb]
-    (let [reqs])
+;; that's the easy bits
 
-    (let [p (js/Promise.all
+;; 1. given company name, get symbol
+;; 2. given symbol, get price for last three days
+;; 3. given a list of
 
-             [])]))
+
+;; what if API adds API that is multi-read for dates? graphql is example
+;; 
+
+(defn get-all-prices [company symbol]
+  (if symbol
+    (js/)
+    )
+  )
+
+
+
+
+
 

@@ -27,6 +27,17 @@
                    "Access-Control-Allow-Origin" "*"}
          :body    (str "No symbol found for " name)})
 
+      "/dates-available"
+      (if-let [date->price (get symbol->date->price symbol)]
+        {:status  200
+         :headers {"Content-Type" "text/plain"
+                   "Access-Control-Allow-Origin" "*"}
+         :body    (-> date->price keys sort vec pr-str)}
+        {:status  404
+         :headers {"Content-Type" "text/plain"
+                   "Access-Control-Allow-Origin" "*"}
+         :body    (str "No dates found for " symbol)})
+
       "/price"
       (if-let [price (get-in symbol->date->price [symbol date])]
         {:status  200
