@@ -260,25 +260,70 @@
 
 ;; 1. callbacks
 (defn get-low-price [name symbol cb eb]
-  (if name
-    (http/GET "http://localhost:3333/symbol"
-              {:params {:name name}
-               :error-handler eb
-               :handler (fn [symbol]
-                          (http/GET "http://localhost:3333/dates-available"
-                                    {:params {:symbol symbol}
-                                     :error-handler eb
-                                     :handler (fn [dates]
-                                                (let [ps (map #(get-price+ % symbol) dates)]
-                                                  (-> (js/Promise.all ps)
-                                                      (.then #(apply min %))
-                                                      (.then cb)
-                                                      (.catch eb))))
-                                     }))})))
+  (if symbol
+    (http/GET "http://localhost:3333/dates-available"
+                                      {:params {:symbol symbol}
+                                       :error-handler eb
+                                       :handler (fn [dates]
+                                                  (let [parsed-dates (reader/read-string dates)
+                                                        ps (map #(get-price+ % symbol) parsed-dates)]
+                                                    (-> (js/Promise.all ps)
+                                                        (.then #(apply min %))
+                                                        (.then cb)
+                                                        (.catch eb))))})
+    (if name
+      (http/GET "http://localhost:3333/symbol"
+                {:params {:name name}
+                 :error-handler eb
+                 :handler (fn [symbol]
+                            (http/GET "http://localhost:3333/dates-available"
+                                      {:params {:symbol symbol}
+                                       :error-handler eb
+                                       :handler (fn [dates]
+                                                  (let [parsed-dates (reader/read-string dates)
+                                                        ps (map #(get-price+ % symbol) parsed-dates)]
+                                                    (-> (js/Promise.all ps)
+                                                        (.then #(apply min %))
+                                                        (.then cb)
+                                                        (.catch eb))))}))}))))
 
 (comment
   (get-low-price "Google" nil ok! fail!)
+  (get-low-price nil "GOOGL" ok! fail!)
   )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-prices2 [symbol dates cb eb]
+  (let [ps (map #(get-price+ % symbol) dates)]
+    (-> (js/Promise.all ps)
+        (.then #(apply min %))
+        (.then cb)
+        (.catch eb))))
+
+(defn get-min-price-available [symbol cb eb]
+  (http/GET "http://localhost:3333/dates-available"
+            {:params {:symbol symbol}
+             :error-handler eb
+             :handler (fn [dates]
+                        (get-prices2 symbol (reader/read-string dates) cb eb))}))
+
+(defn get-low-price2 [name symbol cb eb]
+  (if symbol
+    (get-min-price-available symbol cb eb)
+    (if name
+      (http/GET "http://localhost:3333/symbol"
+                {:params {:name name}
+                 :error-handler eb
+                 :handler (fn [symbol]
+                            (get-min-price-available symbol cb eb))}))))
+
+(comment
+  (get-low-price2 "Google" nil ok! fail!)
+  (get-low-price2 nil "GOOGL" ok! fail!)
+  )
+
+
 
 ;; first, show the parts that are logic and parts that are effects
 ;; to show that it's not trivial to break it out
@@ -287,14 +332,15 @@
 ;; is the solution tools? show promises?
 
 ;; what about abstraction?
-;; show list of questions, maybe not 
-;; 
+;; -- show that we haven't actually made our code more testable
+;; -- we actually have downsides (error handling, redundant effects, bigger API)
 
-;; abstract into promises 
+;; abstract into functions!
 
+;; if not abstraction, or tools, what helps?
 
-
-
-
-
-
+;; 1. colocate as much as possible (reasoning) (Understanding comes from introspection and readability)
+;; 2. use tools to improve readability
+;; 3. consider avoiding decisions
+;; 4. less chatty interface (graphQL)
+;; 5.
