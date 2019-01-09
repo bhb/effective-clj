@@ -395,7 +395,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; transparent functions
+;; 1. avoid conditionals
 
 (defn get-prices4 [symbol cb eb]
   (http/GET "http://localhost:3333/dates-available"
@@ -420,7 +420,63 @@
   (get-low-price4 nil "GOOGL" ok! fail!)
   )
 
-;; extract pure functions
+;; 2. extract pure functions
+
+(defn price-reqs5 [dates-str symbol]
+  (price-reqs (reader/read-string dates-str) symbol))
+
+(defn dates-req [looked-up-symbol provided-symbol]
+  {:url "http://localhost:3333/dates-available"
+   :params {:symbol (or looked-up-symbol provided-symbol)}})
+
+(defn symbol-req [name]
+  {:url "http://localhost:3333/symbol"
+   :params {:name name}})
+
+(defn get!
+  ([req cb]
+   (get! req cb cb))
+  ([req cb eb]
+   (http/GET (:url req)
+             (assoc req
+                    :handler cb
+                    :error-handler eb))))
+
+(defn get+2 [req]
+  (let [{:keys [url params]} req]
+    (js/Promise. (fn [resolve reject]
+                   (http/GET url
+                             {:params params
+                              :handler resolve
+                              :error-handler reject})))))
+
+(defn get-prices5 [looked-up-symbol provided-symbol cb eb]
+  (let [req (dates-req looked-up-symbol provided-symbol)]
+    (get! req
+          (fn [dates]
+            (let [reqs (price-reqs5 dates (-> req :params :symbol))
+                  ps (map get+2 reqs)]
+              (-> (js/Promise.all ps)
+                  (.then #(apply min %))
+                  (.then cb)
+                  (.catch eb))))
+          eb)))
+
+(defn response->sym [response]
+  (if (and (map? response) (= 404 (:status response)))
+    nil
+    response))
+
+(defn get-low-price5 [name symbol cb eb]
+  ;; TODO: get! could take one arg which means use for both
+  (get! (symbol-req name)
+        #(get-prices5 (response->sym %) symbol cb eb)))
+
+(comment
+  (price-reqs5 "[\"2018-12-01\"]" "GOOGL")
+  (get-low-price5 "Google" nil ok! fail!)
+  (get-low-price5 nil "GOOGL" ok! fail!)
+  )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -429,7 +485,7 @@
 ;; after relocating code, talk about benefits for error handling, performance
 ;; 
 ;; -- we actually have downsides (error handling, redundant effects, bigger API)
-p
+
 
 ;; 1. colocate as much as possible (reasoning) (Understanding comes from introspection and readability)
 ;; 2. use tools to improve readability
