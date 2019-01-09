@@ -177,6 +177,7 @@
 (comment
   (get-mean-price1 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x]))))
 
+;; TODO - maybe write get+ instead here
 (defn get-price+ [date symbol]
   (js/Promise. (fn [resolve reject]
                  (get-price
@@ -294,6 +295,19 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;
+
+;; first, show the parts that are logic and parts that are effects
+;; to show that it's not trivial to break it out
+;; emphasize we can't trivially use our old trick
+
+;; what about abstraction?
+;; (do a checklist)
+;; cool, we've improved duplication, code is shorter
+;; have we made it more transparent? 
+;; -- show that we haven't actually made our code more testable
+
+
 (defn get-prices2 [symbol dates cb eb]
   (let [ps (map #(get-price+ % symbol) dates)]
     (-> (js/Promise.all ps)
@@ -323,17 +337,47 @@
   (get-low-price2 nil "GOOGL" ok! fail!)
   )
 
+;;; what about promises??
+
+;; TODO - maybe use get+ more places
+(defn get+ [url params]
+  (js/Promise. (fn [resolve reject]
+                 (http/GET url
+                           {:params params
+                            :handler resolve
+                            :error-handler reject}))))
+
+(comment
+  (-> (get+ "http://localhost:3333/dates-available" {:symbol "GOOGL"})
+      (.then reader/read-string)
+      (.then ok!)
+      ))
 
 
-;; first, show the parts that are logic and parts that are effects
-;; to show that it's not trivial to break it out
-;; emphasize we can't trivially use our old trick
+(defn get-prices2+ [symbol dates]
+  (let [ps (map #(get-price+ % symbol) dates)]
+    (-> (js/Promise.all ps)
+        (.then #(apply min %)))))
 
-;; is the solution tools? show promises?
+(defn get-min-price-available+ [symbol]
+  (-> (get+ "http://localhost:3333/dates-available" {:symbol symbol})
+      (.then #(get-prices2+ symbol (reader/read-string %)))))
 
-;; what about abstraction?
-;; -- show that we haven't actually made our code more testable
+(defn get-low-price3 [name symbol cb eb]
+  (-> (if symbol
+        (get-min-price-available+ symbol)
+        (if name
+          (-> (get+ "http://localhost:3333/symbol" {:name name})
+              (.then #(get-min-price-available+ %)))))
+      (.then cb)
+      (.catch eb)))
+
 ;; -- we actually have downsides (error handling, redundant effects, bigger API)
+
+(comment
+  (get-low-price3 "Google" nil ok! fail!)
+  (get-low-price3 nil "GOOGL" ok! fail!)
+  )
 
 ;; abstract into functions!
 
