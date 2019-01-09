@@ -302,6 +302,7 @@
 ;; emphasize we can't trivially use our old trick
 
 ;; what about abstraction?
+;; abstract into functions!
 ;; (do a checklist)
 ;; cool, we've improved duplication, code is shorter
 ;; have we made it more transparent? 
@@ -372,16 +373,63 @@
       (.then cb)
       (.catch eb)))
 
-;; -- we actually have downsides (error handling, redundant effects, bigger API)
-
 (comment
   (get-low-price3 "Google" nil ok! fail!)
   (get-low-price3 nil "GOOGL" ok! fail!)
   )
 
-;; abstract into functions!
+;; what'd we get?
+;; -- shorter code
+;; -- less repetition of callbacks
+;; -- less nesting
+;; -- still no transparency
+;; -- TODO - maybe eventually do version with promises and, say, circuit-breaker?
 
 ;; if not abstraction, or tools, what helps?
+
+;; 1. (consider) avoiding decisions
+;; 2. transparent functions
+;; 3. co-locate IO
+;; 4. (consider) using bigger requests (e.g. graphQL)
+;; 5. Use tools to parallelize, improve readability
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; transparent functions
+
+(defn get-prices4 [symbol cb eb]
+  (http/GET "http://localhost:3333/dates-available"
+            {:params {:symbol symbol}
+             :error-handler eb
+             :handler (fn [dates]
+                        (let [parsed-dates (reader/read-string dates)
+                              ps (map #(get-price+ % symbol) parsed-dates)]
+                          (-> (js/Promise.all ps)
+                              (.then #(apply min %))
+                              (.then cb)
+                              (.catch eb))))}))
+
+(defn get-low-price4 [name symbol cb eb]
+  (http/GET "http://localhost:3333/symbol"
+            {:params {:name name}
+             :error-handler #(get-prices4 symbol cb eb)
+             :handler #(get-prices4 % cb eb)}))
+
+(comment
+  (get-low-price4 "Google" nil ok! fail!)
+  (get-low-price4 nil "GOOGL" ok! fail!)
+  )
+
+;; extract pure functions
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;; after relocating code, talk about benefits for error handling, performance
+;; 
+;; -- we actually have downsides (error handling, redundant effects, bigger API)
+p
 
 ;; 1. colocate as much as possible (reasoning) (Understanding comes from introspection and readability)
 ;; 2. use tools to improve readability
