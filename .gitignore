@@ -1,3 +1,4 @@
 .cpcache
 .dir-locals.el
 target
+.rebel_readline_history
