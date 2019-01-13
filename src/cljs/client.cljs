@@ -390,8 +390,9 @@
 ;; 1. (consider) avoiding decisions
 ;; 2. transparent functions
 ;; 3. co-locate IO
-;; 4. (consider) using bigger requests (e.g. graphQL)
-;; 5. Use tools to parallelize, improve readability
+;; 4. Use tools to parallelize, improve readability
+;; 5. (consider) using bigger requests (e.g. graphQL)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -468,7 +469,6 @@
     response))
 
 (defn get-low-price5 [name symbol cb eb]
-  ;; TODO: get! could take one arg which means use for both
   (get! (symbol-req name)
         #(get-prices5 (response->sym %) symbol cb eb)))
 
@@ -481,10 +481,70 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; co-locate IO
+
+(defn price-reqs6 [dates-str symbol]
+  (price-reqs (reader/read-string dates-str) symbol))
+
+(defn dates-req6 [looked-up-symbol provided-symbol]
+  {:url "http://localhost:3333/dates-available"
+   :params {:symbol (or looked-up-symbol provided-symbol)}})
+
+(defn symbol-req6 [name]
+  {:url "http://localhost:3333/symbol"
+   :params {:name name}})
+
+(defn get!6
+  ([req cb]
+   (get! req cb cb))
+  ([req cb eb]
+   (http/GET (:url req)
+             (assoc req
+                    :handler cb
+                    :error-handler eb))))
+
+(defn get+6 [req]
+  (let [{:keys [url params]} req]
+    (js/Promise. (fn [resolve reject]
+                   (http/GET url
+                             {:params params
+                              :handler resolve
+                              :error-handler reject})))))
+
+(defn response->sym6 [response]
+  (if (and (map? response) (= 404 (:status response)))
+    nil
+    response))
+
+(defn get-low-price6 [name symbol cb eb]
+  (get! (symbol-req name)
+        (fn [response]
+          (let [looked-up-symbol (response->sym response)
+                req (dates-req6 looked-up-symbol symbol)]
+            (get! req
+                  (fn [dates]
+                    (let [reqs (price-reqs6 dates (-> req :params :symbol))
+                          ps (map get+6 reqs)]
+                      (-> (js/Promise.all ps)
+                          (.then #(apply min %))
+                          (.then cb)
+                          (.catch eb))))
+                  eb)))))
+
+
+(comment
+  (price-reqs6 "[\"2018-12-01\"]" "GOOGL")
+  (get-low-price6 "Google" nil ok! fail!)
+  (get-low-price6 nil "GOOGL" ok! fail!)
+  )
 
 ;; after relocating code, talk about benefits for error handling, performance
 ;; 
 ;; -- we actually have downsides (error handling, redundant effects, bigger API)
+
+
+;; use tools to improve readability
+
 
 
 ;; 1. colocate as much as possible (reasoning) (Understanding comes from introspection and readability)
