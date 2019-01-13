@@ -1,7 +1,14 @@
 (ns server
   (:require [org.httpkit.server :as httpkit]
             [ring.middleware.params :refer [wrap-params]]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [expound.alpha :as expound]
+            [clojure.spec.alpha :as s]
+            [clojure.edn :as edn]))
+
+(set! s/*explain-out* (expound/custom-printer {:theme :figwheel-theme
+                                               :print-specs? false
+                                               :show-valid-values? true}))
 
 (def company-name->symbol
   {"google" "GOOGL"})
@@ -14,8 +21,11 @@
             "2018-12-25" 1060.01}})
 
 (defn app* [req]
-  (let [{:keys [uri query-params]} req
-        {:strs [name symbol date]} query-params]
+  (let [{:keys [uri query-params form-params]} req
+        {:strs [name symbol date]} query-params
+        {:strs [dates]} form-params
+        dates (edn/read-string dates)
+        symbol (or symbol (get form-params "symbol"))]
     (case uri
       "/symbol"
       (if-let [stock-symbol (get company-name->symbol (string/lower-case name))]
@@ -50,7 +60,22 @@
                    "Access-Control-Allow-Origin" "*"}
          :body    (str "No price found for symbol " symbol " on date " date)})
       {:status 404
-       :body "Not found"})))
+       :body "Not found"}
+
+      "/prices"
+      (if-let [date->prices (get-in symbol->date->price [symbol])]
+        {:status  200
+         :headers {"Content-Type" "application/json"
+                   "Access-Control-Allow-Origin" "*"}
+         :body    (let [date-set (set dates)]
+                    (pr-str (->> date->prices
+                                 (filter #(contains? date-set (key %)))
+                                 (map (fn [[k v]] [k (str v " USD")]))
+                                 (into {}))))}
+        {:status  404
+         :headers {"Content-Type" "text/plain"
+                   "Access-Control-Allow-Origin" "*"}
+         :body    (str "No prices found for symbol " symbol)}))))
 
 (def app (wrap-params app*))
 

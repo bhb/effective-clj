@@ -607,6 +607,70 @@
   (get-low-price7 nil nil ok! fail!)
   )
 
+;; finally, consider if builing bigger requests
+
+(defn price-reqs8 [dates-str symbol]
+  (price-reqs (reader/read-string dates-str) symbol))
+
+(defn dates-req8 [looked-up-symbol provided-symbol]
+  {:url "http://localhost:3333/dates-available"
+   :params {:symbol (or looked-up-symbol provided-symbol)}})
+
+(defn symbol-req8 [name]
+  {:url "http://localhost:3333/symbol"
+   :params {:name name}})
+
+(defn get!8
+  ([req cb]
+   (get! req cb cb))
+  ([req cb eb]
+   (http/GET (:url req)
+             (assoc req
+                    :handler cb
+                    :error-handler eb))))
+
+(defn get+8 [req]
+  (let [{:keys [url params]} req]
+    (js/Promise. (fn [resolve reject]
+                   (http/GET url
+                             {:params params
+                              :handler resolve
+                              :error-handler reject})))))
+
+;; TODO - rename
+(defn get+8-both-paths [req]
+  (let [{:keys [url params]} req]
+    (js/Promise. (fn [resolve reject]
+                   (http/GET url
+                             {:params params
+                              :handler resolve
+                              :error-handler resolve})))))
+
+(defn response->sym8 [response]
+  (if (and (map? response) (= 404 (:status response)))
+    nil
+    response))
+
+(defn get-low-price8 [name symbol cb eb]
+  (-> (get+8-both-paths (symbol-req name))
+      (.then (fn [response]
+               (let [looked-up-symbol (response->sym response)
+                     req (dates-req8 looked-up-symbol symbol)]
+                 (-> (js/Promise.all [(get+8 req) (js/Promise.resolve req)])))))
+      (.then (fn [[dates req]]
+               (let [reqs (price-reqs8 dates (-> req :params :symbol))
+                     ps (map get+8 reqs)]
+                 (js/Promise.all ps))))
+      (.then #(apply min %))
+      (.then cb)
+      (.catch eb)))
+
+(comment
+  (get-low-price8 "Google" nil ok! fail!)
+  (get-low-price8 nil "GOOGL" ok! fail!)
+  (get-low-price8 nil nil ok! fail!)
+  )
+
 
 (comment
   (symbol-req nil)
