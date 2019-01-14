@@ -9,7 +9,8 @@
            :server {:extra-paths ["src/clj"]
                     :extra-deps {ring/ring-core {:mvn/version "1.7.1"}
                                  http-kit {:mvn/version "2.2.0"}
-                                 expound {:mvn/version "0.7.2"}}
+                                 expound {:mvn/version "0.7.2"}
+                                 ring-middleware-format {:mvn/version "0.7.2"}}
                     :main-opts ["-m" "server"]}
            ;; clj -A:lint:lint/fix
            :lint {:extra-deps {com.jameslaverack/cljfmt-runner

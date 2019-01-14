@@ -21,11 +21,15 @@
             "2018-12-25" 1060.01}})
 
 (defn app* [req]
-  (let [{:keys [uri query-params form-params]} req
-        {:strs [name symbol date]} query-params
-        {:strs [dates]} form-params
+  (let [{:keys [uri query-params #_form-params]} req
+        {:strs [name symbol date dates]} query-params
+        ;;{:strs [dates]} form-params
         dates (edn/read-string dates)
-        symbol (or symbol (get form-params "symbol"))]
+        _ (prn [:bhb.dates dates])
+        ;;symbol (or symbol (get form-params "symbol"))
+        _ (prn [:bhb.req req])
+
+        ]
     (case uri
       "/symbol"
       (if-let [stock-symbol (get company-name->symbol (string/lower-case name))]
@@ -65,9 +69,13 @@
       "/prices"
       (if-let [date->prices (get-in symbol->date->price [symbol])]
         {:status  200
-         :headers {"Content-Type" "application/json"
+         :headers {"Content-Type" "text/plain"
                    "Access-Control-Allow-Origin" "*"}
          :body    (let [date-set (set dates)]
+                    (prn [:bhb.sending (pr-str (->> date->prices
+                                 (filter #(contains? date-set (key %)))
+                                 (map (fn [[k v]] [k (str v " USD")]))
+                                 (into {})))])
                     (pr-str (->> date->prices
                                  (filter #(contains? date-set (key %)))
                                  (map (fn [[k v]] [k (str v " USD")]))
