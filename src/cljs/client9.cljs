@@ -1,4 +1,4 @@
-(ns cljs.client8
+(ns cljs.client9
   (:require
     [cljs.client :refer [get-today! ok! fail! mean usd->num get+]]
     [ajax.core :as http]
@@ -36,6 +36,7 @@
 (defn get-prices+ [symbol dates]
   (let [ps (map #(get-price+ % symbol) dates)]
     (-> (js/Promise.all ps)
+        (.then (fn [xs] (map usd->num xs)))
         (.then #(apply min %)))))
 
 (defn get-min-price-available+ [symbol]

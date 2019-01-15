@@ -77,44 +77,6 @@
        (map #(price-req % nil symbol))
        (remove #(= :noop (:action %)))))
 
-;;;;;;;;;;;;;;;;;;;
-
-
-;; if not abstraction, or tools, what helps?
-
-;; 1. (consider) avoiding decisions
-;; 2. transparent functions
-;; 3. co-locate IO
-;; 4. Use tools to parallelize, improve readability
-;; 5. (consider) using bigger requests (e.g. graphQL)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; 1. avoid conditionals
-
-
-(defn get-prices4 [symbol cb eb]
-  (http/GET "http://localhost:3333/dates-available"
-    {:params {:symbol symbol}
-     :error-handler eb
-     :handler (fn [dates]
-                (let [parsed-dates (reader/read-string dates)
-                      ps (map #(get-price+ % symbol) parsed-dates)]
-                  (-> (js/Promise.all ps)
-                      (.then #(apply min %))
-                      (.then cb)
-                      (.catch eb))))}))
-
-(defn get-low-price4 [name symbol cb eb]
-  (http/GET "http://localhost:3333/symbol"
-    {:params {:name name}
-     :error-handler #(get-prices4 symbol cb eb)
-     :handler #(get-prices4 % cb eb)}))
-
-(comment
-  (get-low-price4 "Google" nil ok! fail!)
-  (get-low-price4 nil "GOOGL" ok! fail!))
 
 ;; 2. extract pure functions
 
