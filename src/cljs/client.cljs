@@ -70,59 +70,6 @@
        (map #(price-req % nil symbol))
        (remove #(= :noop (:action %)))))
 
-
-;; that's the easy bits
-
-;; 1. given company name, get symbol
-;; 2. given symbol, get all prices
-
-
-
-;; what if API adds API that is multi-read for dates? graphql is example
-;;
-
-;; fundamentally, we have
-;; company -> symbol -> dates -> prices
-
-;; 1. callbacks
-
-
-(defn get-low-price [name symbol cb eb]
-  (if symbol
-    (http/GET "http://localhost:3333/dates-available"
-      {:params {:symbol symbol}
-       :error-handler eb
-       :handler (fn [dates]
-                  (let [parsed-dates (reader/read-string dates)
-                        ps (map #(get-price+ % symbol) parsed-dates)]
-                    (-> (js/Promise.all ps)
-                                                        ;; TODO - this needs to remove "USD" from string
-                                                        ;; OR consider cutting the compilcation of USD on end
-                        (.then #(apply min %))
-                        (.then cb)
-                        (.catch eb))))})
-    (when name
-      (http/GET "http://localhost:3333/symbol"
-        {:params {:name name}
-         :error-handler eb
-         :handler (fn [symbol]
-                    (http/GET "http://localhost:3333/dates-available"
-                      {:params {:symbol symbol}
-                       :error-handler eb
-                       :handler (fn [dates]
-                                  (let [parsed-dates (reader/read-string dates)
-                                        ps (map #(get-price+ % symbol) parsed-dates)]
-                                    (-> (js/Promise.all ps)
-                                        (.then #(apply min %))
-                                        (.then cb)
-                                        (.catch eb))))}))}))))
-
-(comment
-  (get-low-price "Google" nil ok! fail!)
-  (get-low-price nil "GOOGL" ok! fail!))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;;;;;;;;;;;;;;;;;;;
 
 ;; first, show the parts that are logic and parts that are effects
