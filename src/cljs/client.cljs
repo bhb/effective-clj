@@ -34,6 +34,13 @@
       (string/replace " USD" "")
       js/parseFloat))
 
+(defn get+ [url params]
+  (js/Promise. (fn [resolve reject]
+                 (http/GET url
+                   {:params params
+                    :handler resolve
+                    :error-handler reject}))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; TODO remove this section ;;;;;;;;
@@ -72,53 +79,6 @@
 
 ;;;;;;;;;;;;;;;;;;;
 
-
-
-;;; what about promises??
-
-;; TODO - maybe use get+ more places
-
-
-(defn get+ [url params]
-  (js/Promise. (fn [resolve reject]
-                 (http/GET url
-                   {:params params
-                    :handler resolve
-                    :error-handler reject}))))
-
-(comment
-  (-> (get+ "http://localhost:3333/dates-available" {:symbol "GOOGL"})
-      (.then reader/read-string)
-      (.then ok!)))
-
-(defn get-prices2+ [symbol dates]
-  (let [ps (map #(get-price+ % symbol) dates)]
-    (-> (js/Promise.all ps)
-        (.then #(apply min %)))))
-
-(defn get-min-price-available+ [symbol]
-  (-> (get+ "http://localhost:3333/dates-available" {:symbol symbol})
-      (.then #(get-prices2+ symbol (reader/read-string %)))))
-
-(defn get-low-price3 [name symbol cb eb]
-  (-> (if symbol
-        (get-min-price-available+ symbol)
-        (when name
-          (-> (get+ "http://localhost:3333/symbol" {:name name})
-              (.then #(get-min-price-available+ %)))))
-      (.then cb)
-      (.catch eb)))
-
-(comment
-  (get-low-price3 "Google" nil ok! fail!)
-  (get-low-price3 nil "GOOGL" ok! fail!))
-
-;; what'd we get?
-;; -- shorter code
-;; -- less repetition of callbacks
-;; -- less nesting
-;; -- still no transparency
-;; -- TODO - maybe eventually do version with promises and, say, circuit-breaker?
 
 ;; if not abstraction, or tools, what helps?
 
