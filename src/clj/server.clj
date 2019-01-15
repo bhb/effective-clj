@@ -23,11 +23,7 @@
 (defn app* [req]
   (let [{:keys [uri query-params #_form-params]} req
         {:strs [name symbol date dates]} query-params
-        ;;{:strs [dates]} form-params
-        dates (edn/read-string dates)
-        _ (prn [:bhb.dates dates])
-        ;;symbol (or symbol (get form-params "symbol"))
-        _ (prn [:bhb.req req])]
+        dates (edn/read-string dates)]
 
     (case uri
       "/symbol"
@@ -71,10 +67,6 @@
          :headers {"Content-Type" "text/plain"
                    "Access-Control-Allow-Origin" "*"}
          :body    (let [date-set (set dates)]
-                    (prn [:bhb.sending (pr-str (->> date->prices
-                                                    (filter #(contains? date-set (key %)))
-                                                    (map (fn [[k v]] [k (str v " USD")]))
-                                                    (into {})))])
                     (pr-str (->> date->prices
                                  (filter #(contains? date-set (key %)))
                                  (map (fn [[k v]] [k (str v " USD")]))
