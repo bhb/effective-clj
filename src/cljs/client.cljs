@@ -29,29 +29,23 @@
   (/ (apply + prices)
      (count prices)))
 
+(defn usd->num [s]
+  (-> s
+      (string/replace " USD" "")
+      js/parseFloat))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; TODO remove this section ;;;;;;;;
 
 (defn get-price! [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
-      {:handler (fn [response]
-                  (cb
-                   (-> response
-                       (string/replace " USD" "")
-                       js/parseFloat)))
-       :error-handler (fn [response] (eb response))
-       :params {:symbol (-> symbol string/upper-case string/trim)
-                :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
+              {:handler cb
+               :error-handler eb
+               :params {:symbol (-> symbol string/upper-case string/trim)
+                        :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
-
-(defn price-req [date today symbol]
-  (if symbol
-    {:action :get
-     :url "http://localhost:3333/price"
-     ;; TODO - don't put handler or error-handler here
-     :params {:symbol (-> symbol string/upper-case string/trim)
-              :date (-> (or date today) string/trim (string/replace #"/" "-"))}}
-    {:action :noop}))
 
 ;; TODO - maybe write get+ instead here
 (defn get-price+ [date symbol]
@@ -62,65 +56,20 @@
                   resolve
                   reject))))
 
-(comment
-  (-> (get-price+ "2017-12-26" "GOOGL")
-      (.then ok!)))
-
-;; Step 1, break into independent effects
-
-(defn get-mean-price2 [dates symbol cb eb]
-  (let [ps (map #(get-price+ % symbol) dates)]
-    (-> (js/Promise.all ps)
-        (.then mean)
-        (.then cb)
-        (.catch eb))))
-
-(comment
-  (get-mean-price2 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok! fail!))
+(defn price-req [date today symbol]
+  (if symbol
+    {:action :get
+     :url "http://localhost:3333/price"
+     ;; TODO - don't put handler or error-handler here
+     :params {:symbol (-> symbol string/upper-case string/trim)
+              :date (-> (or date today) string/trim (string/replace #"/" "-"))}}
+    {:action :noop}))
 
 (defn price-reqs [dates symbol]
   (->> dates
        (map #(price-req % nil symbol))
        (remove #(= :noop (:action %)))))
 
-(comment
-  (price-reqs [] nil)
-  (price-reqs ["2018-12-28"] nil)
-  (price-reqs ["2018-12-28"] "GOOGL"))
-
-(defn request+ [req])
-
-(defn get-price+2 [req]
-  (js/Promise. (fn [resolve reject]
-                 (let [req' (-> req
-                                (update :handler #(comp resolve %))
-                                (update :handler #(comp reject %)))]
-                   (http/GET (:url req') req')))))
-
-(defn get-mean-price3 [dates symbol cb eb]
-  (let [reqs (price-reqs dates symbol)
-        ps (map get-price+2 reqs)]
-    (-> (js/Promise.all ps)
-        (.then mean)
-        (.then cb)
-        (.catch eb))))
-
-(comment
-  (get-mean-price3 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok! fail!))
-
-(comment
-  (let [p (js/Promise. (fn [resolve reject] (js/setTimeout (fn [] (resolve "foo")) 1000)))]
-    (-> p
-        (.then (fn [x] (prn x)))))
-
-  (let [p (js/Promise. (fn [resolve reject]
-                         (let [req (price-req nil (get-today!) "googl" resolve reject)]
-                           (case (:action req)
-                             :get (http/GET (:url req) req)
-                             :noop (reject nil)))))]
-    (-> p
-        (.then (fn [x] (prn x)))
-        (.catch (fn [x] (prn "failed with" x))))))
 
 ;; that's the easy bits
 

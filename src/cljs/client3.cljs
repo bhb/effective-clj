@@ -1,6 +1,6 @@
 (ns cljs.client3
   (:require
-   [cljs.client :refer [get-today! ok! fail! mean]]
+   [cljs.client :refer [get-today! ok! fail! mean usd->num]]
    [devtools.core :as devtools]
    [ajax.core :as http]
    [clojure.string :as string]))
@@ -15,11 +15,6 @@
      :params {:symbol (-> symbol string/upper-case string/trim)
               :date (-> (or date today) string/trim (string/replace #"/" "-"))}}
     {:action :noop}))
-
-(defn usd->num [s]
-  (-> s
-      (string/replace " USD" "")
-      js/parseFloat))
 
 (comment
   (price-req nil "2018-12-29" nil)
