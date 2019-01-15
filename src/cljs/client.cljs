@@ -9,35 +9,16 @@
 
 (devtools/install!)
 
-;; Effect-ive Clojure
 
-;; Effects
 
-;; Effect$$$
 
-;; Pure function
 
-;; Pure, but opaque
 
-(defn foo [key-fn]
-  (juxt key-fn identity))
 
-;; Easy to test? Yes
-;; Easy to iterate upon? No
-;; Easy to reason about? No
-(foo first)
-(foo :a)
 
-;; Pure is good, but *transparent* is even better
 
-(defn baz [m1 m2]
-  (-> m1
-      (into m2)
-      (assoc :total-keys (+ (count m1)
-                            (count m2)))))
 
-(baz {} {})
-(baz {:x 1} {:y 2})
+
 
 (defn handler [response]
   (prn response))
@@ -744,11 +725,6 @@
 (defn prices-req [symbol dates]
   {:url "http://localhost:3333/symbolz"
    :params {:symbol symbol :dates (pr-str dates)}})
-
-#_(http/GET 
-            {:params 
-             :handler ok!
-             :error-handler fail!})
 
 (defn get-low-price8 [name symbol cb eb]
   (-> (get+8-both-paths (symbol-req name))
