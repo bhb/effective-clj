@@ -8,18 +8,7 @@
 
 (devtools/install!)
 
-(defn price-req [date today symbol]
-  (if symbol
-    {:action :get
-     :url "http://localhost:3333/price"
-     :handler (fn [response]
-                (-> response
-                    (string/replace " USD" "")
-                    js/parseFloat))
-     :error-handler (fn [response] response)
-     :params {:symbol (-> symbol string/upper-case string/trim)
-              :date (-> (or date today) string/trim (string/replace #"/" "-"))}}
-    {:action :noop}))
+;;;;;;;;;; helpers ;;;;;;;;;;;;;;;
 
 (defn get-today! []
   (let [t (js/Date.)
@@ -36,10 +25,11 @@
 (defn fail! [x]
   (prn [:fail x]))
 
+(defn mean [prices]
+  (/ (apply + prices)
+     (count prices)))
 
-
-;;;;;;;;;;;;; independent ;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-price! [date symbol cb eb]
   (if symbol
@@ -54,41 +44,14 @@
                 :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
 
-(defn mean [prices]
-  (/ (apply + prices)
-     (count prices)))
-
-(defn get-prices [dates symbol prices cb eb]
-  (if (empty? dates)
-    (cb prices)
-    (let [[first-date & rest] dates]
-      (get-price! first-date
-                 symbol
-                 (fn [price]
-                   (get-prices
-                    rest
-                    symbol
-                    (conj prices price)
-                    cb
-                    eb))
-                 eb))))
-
-(comment
-  (get-prices ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" [] (fn [x] (prn [:done x]))))
-
-;; First attempt: recursion
-
-
-(defn get-mean-price1 [dates symbol cb eb]
-  (get-prices dates
-              symbol
-              []
-              (fn [prices]
-                (cb (mean prices)))
-              eb))
-
-(comment
-  (get-mean-price1 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x]))))
+(defn price-req [date today symbol]
+  (if symbol
+    {:action :get
+     :url "http://localhost:3333/price"
+     ;; TODO - don't put handler or error-handler here
+     :params {:symbol (-> symbol string/upper-case string/trim)
+              :date (-> (or date today) string/trim (string/replace #"/" "-"))}}
+    {:action :noop}))
 
 ;; TODO - maybe write get+ instead here
 (defn get-price+ [date symbol]
@@ -101,7 +64,7 @@
 
 (comment
   (-> (get-price+ "2017-12-26" "GOOGL")
-      (.then (fn [x] (prn [:done x])))))
+      (.then ok!)))
 
 ;; Step 1, break into independent effects
 
@@ -113,7 +76,7 @@
         (.catch eb))))
 
 (comment
-  (get-mean-price2 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x]))))
+  (get-mean-price2 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok! fail!))
 
 (defn price-reqs [dates symbol]
   (->> dates
@@ -143,7 +106,7 @@
         (.catch eb))))
 
 (comment
-  (get-mean-price3 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" (fn [x] (prn [:done x])) (fn [x] (prn [:err x]))))
+  (get-mean-price3 ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok! fail!))
 
 (comment
   (let [p (js/Promise. (fn [resolve reject] (js/setTimeout (fn [] (resolve "foo")) 1000)))]
@@ -658,6 +621,8 @@
   (get-low-price8 "Google" nil ok! fail!)
   (get-low-price8 nil "GOOGL" ok! fail!)
   (get-low-price8 nil nil ok!
+
+
 
                   fail!))
 

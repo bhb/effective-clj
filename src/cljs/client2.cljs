@@ -1,5 +1,6 @@
 (ns cljs.client2
   (:require
+   [cljs.client :refer [get-today! ok! fail! mean]]
    [devtools.core :as devtools]
    [ajax.core :as http]
    [clojure.string :as string]))
@@ -23,21 +24,6 @@
 ;; if symbol is not provided, return nil
 ;; if price not found, return nil
 
-(defn get-today! []
-  (let [t (js/Date.)
-        dd (.getDate t)
-        dd (if (< dd 10) (str "0" dd) dd)
-        mm (inc (.getMonth t))
-        mm (if (< mm 10) (str "0" mm) mm)
-        yyyy (.getFullYear t)]
-    (str yyyy "-" mm "-" dd)))
-
-(defn ok! [x]
-  (prn [:ok x]))
-
-(defn fail! [x]
-  (prn [:fail x]))
-
 (defn get-price! [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
@@ -52,7 +38,9 @@
     (cb nil)))
 
 (comment
-  (get-price! "2018-12-28" "GOOGL" ok! fail!))
+  (get-price! "2018-12-28" "GOOGL" ok!
+
+              fail!))
 
 
 
