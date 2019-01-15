@@ -4,21 +4,9 @@
    [ajax.core :as http]
    [clojure.string :as string]
    [cljs.reader :as reader]
-   [cognitect.transit :as t]
-   ))
+   [cognitect.transit :as t]))
 
 (devtools/install!)
-
-
-
-
-
-
-
-
-
-
-
 
 (defn handler [response]
   (prn response))
@@ -243,40 +231,41 @@
 ;; company -> symbol -> dates -> prices
 
 ;; 1. callbacks
+
+
 (defn get-low-price [name symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/dates-available"
-                                      {:params {:symbol symbol}
-                                       :error-handler eb
-                                       :handler (fn [dates]
-                                                  (let [parsed-dates (reader/read-string dates)
-                                                        ps (map #(get-price+ % symbol) parsed-dates)]
-                                                    (-> (js/Promise.all ps)
+      {:params {:symbol symbol}
+       :error-handler eb
+       :handler (fn [dates]
+                  (let [parsed-dates (reader/read-string dates)
+                        ps (map #(get-price+ % symbol) parsed-dates)]
+                    (-> (js/Promise.all ps)
                                                         ;; TODO - this needs to remove "USD" from string
                                                         ;; OR consider cutting the compilcation of USD on end
-                                                        (.then #(apply min %))
-                                                        (.then cb)
-                                                        (.catch eb))))})
-    (if name
+                        (.then #(apply min %))
+                        (.then cb)
+                        (.catch eb))))})
+    (when name
       (http/GET "http://localhost:3333/symbol"
-                {:params {:name name}
-                 :error-handler eb
-                 :handler (fn [symbol]
-                            (http/GET "http://localhost:3333/dates-available"
-                                      {:params {:symbol symbol}
-                                       :error-handler eb
-                                       :handler (fn [dates]
-                                                  (let [parsed-dates (reader/read-string dates)
-                                                        ps (map #(get-price+ % symbol) parsed-dates)]
-                                                    (-> (js/Promise.all ps)
-                                                        (.then #(apply min %))
-                                                        (.then cb)
-                                                        (.catch eb))))}))}))))
+        {:params {:name name}
+         :error-handler eb
+         :handler (fn [symbol]
+                    (http/GET "http://localhost:3333/dates-available"
+                      {:params {:symbol symbol}
+                       :error-handler eb
+                       :handler (fn [dates]
+                                  (let [parsed-dates (reader/read-string dates)
+                                        ps (map #(get-price+ % symbol) parsed-dates)]
+                                    (-> (js/Promise.all ps)
+                                        (.then #(apply min %))
+                                        (.then cb)
+                                        (.catch eb))))}))}))))
 
 (comment
   (get-low-price "Google" nil ok! fail!)
-  (get-low-price nil "GOOGL" ok! fail!)
-  )
+  (get-low-price nil "GOOGL" ok! fail!))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -303,42 +292,41 @@
 
 (defn get-min-price-available [symbol cb eb]
   (http/GET "http://localhost:3333/dates-available"
-            {:params {:symbol symbol}
-             :error-handler eb
-             :handler (fn [dates]
-                        (get-prices2 symbol (reader/read-string dates) cb eb))}))
+    {:params {:symbol symbol}
+     :error-handler eb
+     :handler (fn [dates]
+                (get-prices2 symbol (reader/read-string dates) cb eb))}))
 
 (defn get-low-price2 [name symbol cb eb]
   (if symbol
     (get-min-price-available symbol cb eb)
-    (if name
+    (when name
       (http/GET "http://localhost:3333/symbol"
-                {:params {:name name}
-                 :error-handler eb
-                 :handler (fn [symbol]
-                            (get-min-price-available symbol cb eb))}))))
+        {:params {:name name}
+         :error-handler eb
+         :handler (fn [symbol]
+                    (get-min-price-available symbol cb eb))}))))
 
 (comment
   (get-low-price2 "Google" nil ok! fail!)
-  (get-low-price2 nil "GOOGL" ok! fail!)
-  )
+  (get-low-price2 nil "GOOGL" ok! fail!))
 
 ;;; what about promises??
 
 ;; TODO - maybe use get+ more places
+
+
 (defn get+ [url params]
   (js/Promise. (fn [resolve reject]
                  (http/GET url
-                           {:params params
-                            :handler resolve
-                            :error-handler reject}))))
+                   {:params params
+                    :handler resolve
+                    :error-handler reject}))))
 
 (comment
   (-> (get+ "http://localhost:3333/dates-available" {:symbol "GOOGL"})
       (.then reader/read-string)
-      (.then ok!)
-      ))
-
+      (.then ok!)))
 
 (defn get-prices2+ [symbol dates]
   (let [ps (map #(get-price+ % symbol) dates)]
@@ -352,7 +340,7 @@
 (defn get-low-price3 [name symbol cb eb]
   (-> (if symbol
         (get-min-price-available+ symbol)
-        (if name
+        (when name
           (-> (get+ "http://localhost:3333/symbol" {:name name})
               (.then #(get-min-price-available+ %)))))
       (.then cb)
@@ -360,8 +348,7 @@
 
 (comment
   (get-low-price3 "Google" nil ok! fail!)
-  (get-low-price3 nil "GOOGL" ok! fail!)
-  )
+  (get-low-price3 nil "GOOGL" ok! fail!))
 
 ;; what'd we get?
 ;; -- shorter code
@@ -383,30 +370,31 @@
 
 ;; 1. avoid conditionals
 
+
 (defn get-prices4 [symbol cb eb]
   (http/GET "http://localhost:3333/dates-available"
-            {:params {:symbol symbol}
-             :error-handler eb
-             :handler (fn [dates]
-                        (let [parsed-dates (reader/read-string dates)
-                              ps (map #(get-price+ % symbol) parsed-dates)]
-                          (-> (js/Promise.all ps)
-                              (.then #(apply min %))
-                              (.then cb)
-                              (.catch eb))))}))
+    {:params {:symbol symbol}
+     :error-handler eb
+     :handler (fn [dates]
+                (let [parsed-dates (reader/read-string dates)
+                      ps (map #(get-price+ % symbol) parsed-dates)]
+                  (-> (js/Promise.all ps)
+                      (.then #(apply min %))
+                      (.then cb)
+                      (.catch eb))))}))
 
 (defn get-low-price4 [name symbol cb eb]
   (http/GET "http://localhost:3333/symbol"
-            {:params {:name name}
-             :error-handler #(get-prices4 symbol cb eb)
-             :handler #(get-prices4 % cb eb)}))
+    {:params {:name name}
+     :error-handler #(get-prices4 symbol cb eb)
+     :handler #(get-prices4 % cb eb)}))
 
 (comment
   (get-low-price4 "Google" nil ok! fail!)
-  (get-low-price4 nil "GOOGL" ok! fail!)
-  )
+  (get-low-price4 nil "GOOGL" ok! fail!))
 
 ;; 2. extract pure functions
+
 
 (defn price-reqs5 [dates-str symbol]
   (price-reqs (reader/read-string dates-str) symbol))
@@ -424,17 +412,17 @@
    (get! req cb cb))
   ([req cb eb]
    (http/GET (:url req)
-             (assoc req
-                    :handler cb
-                    :error-handler eb))))
+     (assoc req
+            :handler cb
+            :error-handler eb))))
 
 (defn get+2 [req]
   (let [{:keys [url params]} req]
     (js/Promise. (fn [resolve reject]
                    (http/GET url
-                             {:params params
-                              :handler resolve
-                              :error-handler reject})))))
+                     {:params params
+                      :handler resolve
+                      :error-handler reject})))))
 
 (defn get-prices5 [looked-up-symbol provided-symbol cb eb]
   (let [req (dates-req looked-up-symbol provided-symbol)]
@@ -460,13 +448,13 @@
 (comment
   (price-reqs5 "[\"2018-12-01\"]" "GOOGL")
   (get-low-price5 "Google" nil ok! fail!)
-  (get-low-price5 nil "GOOGL" ok! fail!)
-  )
+  (get-low-price5 nil "GOOGL" ok! fail!))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; co-locate IO
+
 
 (defn price-reqs6 [dates-str symbol]
   (price-reqs (reader/read-string dates-str) symbol))
@@ -484,17 +472,17 @@
    (get! req cb cb))
   ([req cb eb]
    (http/GET (:url req)
-             (assoc req
-                    :handler cb
-                    :error-handler eb))))
+     (assoc req
+            :handler cb
+            :error-handler eb))))
 
 (defn get+6 [req]
   (let [{:keys [url params]} req]
     (js/Promise. (fn [resolve reject]
                    (http/GET url
-                             {:params params
-                              :handler resolve
-                              :error-handler reject})))))
+                     {:params params
+                      :handler resolve
+                      :error-handler reject})))))
 
 (defn response->sym6 [response]
   (if (and (map? response) (= 404 (:status response)))
@@ -516,12 +504,10 @@
                           (.catch eb))))
                   eb)))))
 
-
 (comment
   (price-reqs6 "[\"2018-12-01\"]" "GOOGL")
   (get-low-price6 "Google" nil ok! fail!)
-  (get-low-price6 nil "GOOGL" ok! fail!)
-  )
+  (get-low-price6 nil "GOOGL" ok! fail!))
 
 ;; after relocating code, talk about benefits for error handling, performance
 ;; 
@@ -529,6 +515,7 @@
 
 
 ;; use tools to improve readability
+
 
 (defn price-reqs7 [dates-str symbol]
   (price-reqs (reader/read-string dates-str) symbol))
@@ -546,26 +533,26 @@
    (get! req cb cb))
   ([req cb eb]
    (http/GET (:url req)
-             (assoc req
-                    :handler cb
-                    :error-handler eb))))
+     (assoc req
+            :handler cb
+            :error-handler eb))))
 
 (defn get+7 [req]
   (let [{:keys [url params]} req]
     (js/Promise. (fn [resolve reject]
                    (http/GET url
-                             {:params params
-                              :handler resolve
-                              :error-handler reject})))))
+                     {:params params
+                      :handler resolve
+                      :error-handler reject})))))
 
 ;; TODO - rename
 (defn get+7-both-paths [req]
   (let [{:keys [url params]} req]
     (js/Promise. (fn [resolve reject]
                    (http/GET url
-                             {:params params
-                              :handler resolve
-                              :error-handler resolve})))))
+                     {:params params
+                      :handler resolve
+                      :error-handler resolve})))))
 
 (defn response->sym7 [response]
   (if (and (map? response) (= 404 (:status response)))
@@ -577,7 +564,7 @@
       (.then (fn [response]
                (let [looked-up-symbol (response->sym response)
                      req (dates-req7 looked-up-symbol symbol)]
-                 (-> (js/Promise.all [(get+7 req) (js/Promise.resolve req)])))))
+                 (js/Promise.all [(get+7 req) (js/Promise.resolve req)]))))
       (.then (fn [[dates req]]
                (let [reqs (price-reqs7 dates (-> req :params :symbol))
                      ps (map get+7 reqs)]
@@ -589,10 +576,10 @@
 (comment
   (get-low-price7 "Google" nil ok! fail!)
   (get-low-price7 nil "GOOGL" ok! fail!)
-  (get-low-price7 nil nil ok! fail!)
-  )
+  (get-low-price7 nil nil ok! fail!))
 
 ;; finally, consider if builing bigger requests
+
 
 (defn price-reqs8 [dates-str symbol]
   (price-reqs (reader/read-string dates-str) symbol))
@@ -610,26 +597,26 @@
    (get! req cb cb))
   ([req cb eb]
    (http/GET (:url req)
-             (assoc req
-                    :handler cb
-                    :error-handler eb))))
+     (assoc req
+            :handler cb
+            :error-handler eb))))
 
 (defn get+8 [req]
   (let [{:keys [url params]} req]
     (js/Promise. (fn [resolve reject]
                    (http/GET url
-                             {:params params
-                              :handler resolve
-                              :error-handler reject})))))
+                     {:params params
+                      :handler resolve
+                      :error-handler reject})))))
 
 ;; TODO - rename
 (defn get+8-both-paths [req]
   (let [{:keys [url params]} req]
     (js/Promise. (fn [resolve reject]
                    (http/GET url
-                             {:params params
-                              :handler resolve
-                              :error-handler resolve})))))
+                     {:params params
+                      :handler resolve
+                      :error-handler resolve})))))
 
 (defn response->sym8 [response]
   (if (and (map? response) (= 404 (:status response)))
@@ -640,87 +627,69 @@
   (let [{:keys [url params format response-format]} req]
     (js/Promise. (fn [resolve reject]
                    (http/POST url
-                              {:params params
-                               :format format
-                               :response-format response-format
-                              :handler resolve
-                              :error-handler resolve}))))
-  )
+                     {:params params
+                      :format format
+                      :response-format response-format
+                      :handler resolve
+                      :error-handler resolve})))))
 
 (defn form-data [m]
   (reduce
    (fn [fd [k v]]
      (.append fd (str k) v)
-     fd
-     )
+     fd)
    (js/FormData.)
-   m
-   )
-  )
+   m))
 
 (form-data {"a" 1 "b" 2})
 
 (defn transit [x]
   (let [w (t/writer :json)]
-    (t/write w x)
-    )
-  )
-
-
+    (t/write w x)))
 
 (comment
   #_(http/POST "https://postman-echo.com/post"
-             {:params {:message "Hello World"
-                       :user    "Bob"}
-              :handler ok!
-              :error-handler fail!})
+      {:params {:message "Hello World"
+                :user    "Bob"}
+       :handler ok!
+       :error-handler fail!})
 
   (http/GET "http://localhost:3333/symbolz"
-            {
-             :params {:symbol "GOOGL" :dates (pr-str ["2018-12-28", "2018-12-27"])}
-             :response-format :text
-             :handler ok!
-             :error-handler fail!})
+    {:params {:symbol "GOOGL" :dates (pr-str ["2018-12-28", "2018-12-27"])}
+     :response-format :text
+     :handler ok!
+     :error-handler fail!})
 
-  
-  
   (edn/edn-response-format)
-  
+
   (-> (post+ {:url "http://localhost:3333/prices"
               :body (form-data {:symbol "GOOGL" :dates ["2018-12-27" "2018-12-28"]})
-              :response-format (edn/edn-response-format)
-              }
-             )
+              :response-format (edn/edn-response-format)})
+
       (.then ok!)
-      (.catch fail!)
-      )
+      (.catch fail!))
 
   (http/POST
-   "http://localhost:3333/prices"
-   {:params {:symbol "GOOGL" :dates ["2018-12-28"]}
-    :handler ok!
-    :error-handler fail!}
-   )
+    "http://localhost:3333/prices"
+    {:params {:symbol "GOOGL" :dates ["2018-12-28"]}
+     :handler ok!
+     :error-handler fail!})
 
   (http/POST
-   "http://localhost:3333/prices"
-   {:params {:symbol "GOOGL" :dates ["2018-12-28"]}
-    :format :transit
-    :handler ok!
-    :error-handler fail!}
-   )
-
+    "http://localhost:3333/prices"
+    {:params {:symbol "GOOGL" :dates ["2018-12-28"]}
+     :format :transit
+     :handler ok!
+     :error-handler fail!})
 
   (let [form-data (doto
-                    (js/FormData.)
+                   (js/FormData.)
                     (.append "symbol" "GOOGL")
-                    (.append "dates" ["2018-12-28"])
-                    )]
+                    (.append "dates" ["2018-12-28"]))]
     (http/POST "http://localhost:3333/prices" {:body form-data
                                                :response-format (http/raw-response-format)
                                                :handler ok!
-                                               :error-handler fail!}))
-  )
+                                               :error-handler fail!})))
 
 (defn prices-req [symbol dates]
   {:url "http://localhost:3333/symbolz"
@@ -731,7 +700,7 @@
       (.then (fn [response]
                (let [looked-up-symbol (response->sym response)
                      req (dates-req8 looked-up-symbol symbol)]
-                 (-> (js/Promise.all [(get+8 req) (js/Promise.resolve req)])))))
+                 (js/Promise.all [(get+8 req) (js/Promise.resolve req)]))))
       (.then (fn [[dates-str req]]
                (prn [:bhb.dates dates-str])
                (get+8 (prices-req (-> req :params :symbol) (reader/read-string dates-str)))))
@@ -746,8 +715,9 @@
 (comment
   (get-low-price8 "Google" nil ok! fail!)
   (get-low-price8 nil "GOOGL" ok! fail!)
-  (get-low-price8 nil nil ok! fail!)
-  )
+  (get-low-price8 nil nil ok!
+
+                  fail!))
 
 
 

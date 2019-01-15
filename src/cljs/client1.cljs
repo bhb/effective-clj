@@ -1,10 +1,6 @@
 (ns cljs.client1
   (:require
-   [devtools.core :as devtools]
-   [ajax.core :as http]
-   [clojure.string :as string]
-   [cljs.reader :as reader]
-   [cognitect.transit :as t]))
+   [devtools.core :as devtools]))
 
 (devtools/install!)
 

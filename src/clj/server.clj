@@ -27,9 +27,8 @@
         dates (edn/read-string dates)
         _ (prn [:bhb.dates dates])
         ;;symbol (or symbol (get form-params "symbol"))
-        _ (prn [:bhb.req req])
+        _ (prn [:bhb.req req])]
 
-        ]
     (case uri
       "/symbol"
       (if-let [stock-symbol (get company-name->symbol (string/lower-case name))]
@@ -73,9 +72,9 @@
                    "Access-Control-Allow-Origin" "*"}
          :body    (let [date-set (set dates)]
                     (prn [:bhb.sending (pr-str (->> date->prices
-                                 (filter #(contains? date-set (key %)))
-                                 (map (fn [[k v]] [k (str v " USD")]))
-                                 (into {})))])
+                                                    (filter #(contains? date-set (key %)))
+                                                    (map (fn [[k v]] [k (str v " USD")]))
+                                                    (into {})))])
                     (pr-str (->> date->prices
                                  (filter #(contains? date-set (key %)))
                                  (map (fn [[k v]] [k (str v " USD")]))
