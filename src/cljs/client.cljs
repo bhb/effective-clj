@@ -36,33 +36,7 @@
 (defn fail! [x]
   (prn [:fail x]))
 
-(comment
-  (price-req nil "2018-12-29" nil)
-  (price-req nil "2018-12-29" "googl")
-  (price-req "2018-12-28" "2018-12-29" "GOOGL")
 
-  (-> (price-req "2018-12-28" "2018-12-29" "GOOGL")
-      (update :handler #(comp ok! %))
-      :handler
-      (apply ["200.1 USD"]))
-
-  (let [response "200.1 USD"]
-    (-> response
-        (string/replace " USD" "")
-        js/parseFloat)))
-
-(defn get-price2 [date symbol cb eb]
-  (let [req (price-req date (get-today!) symbol)]
-    (case (:action req)
-      :get (let [req' (-> req
-                          (update :handler #(comp cb %))
-                          (update :error-handler #(comp eb %)))]
-             (http/GET (:url req') req'))
-      :noop (cb nil))))
-
-(comment
-  (get-price2 "2018-12-28" "GOOGL" ok! fail!)
-  (get-price2 "2018/12/28" "googl" ok! fail!))
 
 ;;;;;;;;;;;;; independent ;;;;;;;;;;;;;;;;;;;;
 
