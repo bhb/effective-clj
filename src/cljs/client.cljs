@@ -77,11 +77,12 @@
        (map #(price-req % nil symbol))
        (remove #(= :noop (:action %)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; 2. extract pure functions
+;; co-locate IO
 
-
-(defn price-reqs5 [dates-str symbol]
+;; TODO - collapse into prior function
+(defn price-reqs2 [dates-str symbol]
   (price-reqs (reader/read-string dates-str) symbol))
 
 (defn dates-req [looked-up-symbol provided-symbol]
@@ -101,45 +102,10 @@
             :handler cb
             :error-handler eb))))
 
-(defn get+2 [req]
-  (let [{:keys [url params]} req]
-    (js/Promise. (fn [resolve reject]
-                   (http/GET url
-                     {:params params
-                      :handler resolve
-                      :error-handler reject})))))
-
-(defn get-prices5 [looked-up-symbol provided-symbol cb eb]
-  (let [req (dates-req looked-up-symbol provided-symbol)]
-    (get! req
-          (fn [dates]
-            (let [reqs (price-reqs5 dates (-> req :params :symbol))
-                  ps (map get+2 reqs)]
-              (-> (js/Promise.all ps)
-                  (.then #(apply min %))
-                  (.then cb)
-                  (.catch eb))))
-          eb)))
-
 (defn response->sym [response]
   (if (and (map? response) (= 404 (:status response)))
     nil
     response))
-
-(defn get-low-price5 [name symbol cb eb]
-  (get! (symbol-req name)
-        #(get-prices5 (response->sym %) symbol cb eb)))
-
-(comment
-  (price-reqs5 "[\"2018-12-01\"]" "GOOGL")
-  (get-low-price5 "Google" nil ok! fail!)
-  (get-low-price5 nil "GOOGL" ok! fail!))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; co-locate IO
-
 
 (defn price-reqs6 [dates-str symbol]
   (price-reqs (reader/read-string dates-str) symbol))
