@@ -53,7 +53,7 @@
         {:status  200
          :headers {"Content-Type" "text/plain"
                    "Access-Control-Allow-Origin" "*"}
-         :body    (str price " USD")}
+         :body    (str price)}
         {:status  404
          :headers {"Content-Type" "text/plain"
                    "Access-Control-Allow-Origin" "*"}
@@ -69,7 +69,7 @@
          :body    (let [date-set (set dates)]
                     (pr-str (->> date->prices
                                  (filter #(contains? date-set (key %)))
-                                 (map (fn [[k v]] [k (str v " USD")]))
+                                 (map (fn [[k v]] [k (str v)]))
                                  (into {}))))}
         {:status  404
          :headers {"Content-Type" "text/plain"

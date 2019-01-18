@@ -28,28 +28,27 @@
       (get-price! first-date
                   symbol
                   (fn [price]
-                    (get-prices!
-                     rest
-                     symbol
-                     (conj prices price)
-                     cb
-                     eb))
+                    (get-prices! rest
+                                 symbol
+                                 (conj prices price)
+                                 cb
+                                 eb))
                   eb))))
 
 (defn get-mean-price! [dates symbol cb eb]
   (get-prices! dates
                symbol
                []
-               (fn [prices]
-                 (cb (mean prices)))
+               (fn [prices] (cb (mean prices)))
                eb))
 
 (comment
-  (get-prices! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" [] ok!)
+  (get-prices! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" [] ok! fail!)
 
-  (get-mean-price! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok!
+  (get-mean-price! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok! fail!)
 
-                   fail!))
+
+  )
 
 
 

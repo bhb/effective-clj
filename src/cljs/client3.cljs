@@ -1,6 +1,6 @@
 (ns cljs.client3
   (:require
-   [cljs.client :refer [get-today! ok! fail! mean usd->num]]
+   [cljs.client :refer [get-today! ok! fail! mean]]
    [devtools.core :as devtools]
    [ajax.core :as http]
    [clojure.string :as string]))
@@ -11,7 +11,6 @@
   (if symbol
     {:action :get
      :url "http://localhost:3333/price"
-     ;; TODO - don't put handler or error-handler here
      :params {:symbol (-> symbol string/upper-case string/trim)
               :date (-> (or date today) string/trim (string/replace #"/" "-"))}}
     {:action :noop}))
@@ -29,7 +28,7 @@
   (let [req (price-req date (get-today!) symbol)]
     (case (:action req)
       :get (let [req' (assoc req
-                             :handler #(cb (usd->num %))
+                             :handler #(cb (js/parseFloat %))
                              :error-handler eb)]
              (http/GET (:url req') req'))
       :noop (cb nil))))

@@ -1,6 +1,6 @@
 (ns cljs.client5
   (:require
-    [cljs.client :refer [get-today! ok! fail! mean usd->num]]
+    [cljs.client :refer [get-today! ok! fail! mean]]
     [ajax.core :as http]
     [clojure.string :as string]))
 
@@ -32,7 +32,7 @@
 (defn get-mean-price! [dates symbol cb eb]
   (let [ps (map #(get-price+ % symbol) dates)]
     (-> (js/Promise.all ps)
-        (.then (fn [xs] (map usd->num xs)))
+        (.then (fn [xs] (map js/parseFloat xs)))
         (.then mean)
         (.then cb)
         (.catch eb))))
