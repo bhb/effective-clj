@@ -102,12 +102,12 @@
                       :handler resolve
                       :error-handler resolve})))))
 
-(defn response->sym7 [response]
+(defn response->sym! [response]
   (if (and (map? response) (= 404 (:status response)))
     nil
     response))
 
-(defn get-low-price7 [name symbol cb eb]
+(defn get-low-price! [name symbol cb eb]
   (-> (get+7-both-paths (symbol-req name))
       (.then (fn [response]
                (let [looked-up-symbol (response->sym response)
@@ -123,6 +123,6 @@
       (.catch eb)))
 
 (comment
-  (get-low-price7 "Google" nil ok! fail!)
-  (get-low-price7 nil "GOOGL" ok! fail!)
-  (get-low-price7 nil nil ok! fail!))
+  (get-low-price! "Google" nil ok! fail!)
+  (get-low-price! nil "GOOGL" ok! fail!)
+  (get-low-price! nil nil ok! fail!))

@@ -179,7 +179,7 @@
   {:url "http://localhost:3333/symbolz"
    :params {:symbol symbol :dates (pr-str dates)}})
 
-(defn get-low-price8 [name symbol cb eb]
+(defn get-low-price! [name symbol cb eb]
   (-> (get+8-both-paths (symbol-req name))
       (.then (fn [response]
                (let [looked-up-symbol (response->sym response)
@@ -197,6 +197,6 @@
       (.catch eb)))
 
 (comment
-  (get-low-price8 "Google" nil ok! fail!)
-  (get-low-price8 nil "GOOGL" ok! fail!)
-  (get-low-price8 nil nil ok! fail!))
+  (get-low-price! "Google" nil ok! fail!)
+  (get-low-price! nil "GOOGL" ok! fail!)
+  (get-low-price! nil nil ok! fail!))
