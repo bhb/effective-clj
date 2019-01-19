@@ -34,6 +34,10 @@
     nil
     response))
 
+(defn min-price [price-strs]
+  (prn [:bhb.here])
+  (apply min (map js/parseFloat price-strs)))
+
 (defn get!
   ([req cb]
    (get! req cb cb))
@@ -58,8 +62,7 @@
             (let [reqs (price-reqs dates (-> req :params :symbol))
                   ps (map get+ reqs)]
               (-> (js/Promise.all ps)
-                  (.then #(map js/parseFloat %))
-                  (.then #(apply min %))
+                  (.then min-price)
                   (.then cb)
                   (.catch eb))))
           eb)))

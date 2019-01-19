@@ -49,8 +49,7 @@
                       most-recent (->> parsed-dates sort (take 5))
                       ps (map #(get-price+ % symbol) most-recent)]
                   (-> (js/Promise.all ps)
-                      (.then (fn [xs] (map js/parseFloat xs)))
-                      (.then #(apply min %))
+                      (.then #(apply min (map js/parseFloat %)))
                       (.then cb)
                       (.catch eb))))}))
 
