@@ -5,9 +5,6 @@
     [clojure.string :as string]
     [cljs.reader :as reader]))
 
-;;; what about promises??
-;; TODO - maybe use get+ more places
-
 (defn get-price! [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
@@ -17,7 +14,6 @@
                         :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
 
-;; TODO - maybe write get+ instead here
 (defn get-price+ [date symbol]
   (js/Promise. (fn [resolve reject]
                  (get-price!

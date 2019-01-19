@@ -13,14 +13,9 @@
                         :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
 
-;; TODO - maybe write get+ instead here
 (defn get-price+ [date symbol]
   (js/Promise. (fn [resolve reject]
-                 (get-price!
-                  date
-                  symbol
-                  resolve
-                  reject))))
+                 (get-price! date symbol resolve reject))))
 
 (comment
   (-> (get-price+ "2018-12-27" "GOOGL")

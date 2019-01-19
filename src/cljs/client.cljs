@@ -27,15 +27,10 @@
   (/ (apply + prices)
      (count prices)))
 
-(defn usd->num [s]
-  (-> s
-      (string/replace " USD" "")
-      js/parseFloat))
-
 (defn get+ [url params]
   (js/Promise. (fn [resolve reject]
                  (http/GET url
-                   {:params params
+                           {:params params
                     :handler resolve
                     :error-handler reject}))))
 
