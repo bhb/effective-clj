@@ -30,8 +30,8 @@
                  (get-price! symbol date resolve))))
 
 (comment
-  (-> (get-symbol+ "Google")
-      (.then #(get-price+ % "2018-12-27"))
-      (.then #(println "$" %)))
+(-> (get-symbol+ "Google")
+    (.then #(get-price+ % "2018-12-27"))
+    (.then #(println "$" %)))  
   )
 

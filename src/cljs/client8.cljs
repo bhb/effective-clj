@@ -1,6 +1,6 @@
 (ns cljs.client8
   (:require
-    [cljs.client :refer [get-today! ok! fail! mean usd->num]]
+    [cljs.client :refer [get-today! ok! fail! mean]]
     [ajax.core :as http]
     [clojure.string :as string]
     [cljs.reader :as reader]))
@@ -36,10 +36,10 @@
                   resolve
                   reject))))
 
-(defn get-prices! [symbol dates cb eb]
+(defn get-prices+ [symbol dates cb eb]
   (let [ps (map #(get-price+ % symbol) dates)]
     (-> (js/Promise.all ps)
-        (.then (fn [xs] (map usd->num xs)))
+        (.then (fn [xs] (map js/parseFloat xs)))
         (.then #(apply min %))
         (.then cb)
         (.catch eb))))
@@ -49,7 +49,8 @@
     {:params {:symbol symbol}
      :error-handler eb
      :handler (fn [dates]
-                (get-prices! symbol (reader/read-string dates) cb eb))}))
+                (let [most-recent (->> (reader/read-string dates) sort (take 5))]
+                  (get-prices+ symbol most-recent cb eb)))}))
 
 (defn get-low-price! [name symbol cb eb]
   (if symbol

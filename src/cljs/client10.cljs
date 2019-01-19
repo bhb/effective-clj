@@ -1,6 +1,6 @@
 (ns cljs.client10
   (:require
-    [cljs.client :refer [get-today! ok! fail! mean usd->num get+]]
+    [cljs.client :refer [get-today! ok! fail!]]
     [ajax.core :as http]
     [clojure.string :as string]
     [cljs.reader :as reader]))
@@ -46,9 +46,10 @@
      :error-handler eb
      :handler (fn [dates]
                 (let [parsed-dates (reader/read-string dates)
-                      ps (map #(get-price+ % symbol) parsed-dates)]
+                      most-recent (->> parsed-dates sort (take 5))
+                      ps (map #(get-price+ % symbol) most-recent)]
                   (-> (js/Promise.all ps)
-                      (.then (fn [xs] (map usd->num xs)))
+                      (.then (fn [xs] (map js/parseFloat xs)))
                       (.then #(apply min %))
                       (.then cb)
                       (.catch eb))))}))
