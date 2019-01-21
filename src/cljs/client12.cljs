@@ -1,9 +1,9 @@
 (ns cljs.client12
   (:require
-    [cljs.client :refer [get-today! ok! fail!]]
-    [ajax.core :as http]
-    [clojure.string :as string]
-    [cljs.reader :as reader]))
+   [cljs.client :refer [get-today! ok! fail!]]
+   [ajax.core :as http]
+   [clojure.string :as string]
+   [cljs.reader :as reader]))
 
 ;; co-locate IO
 

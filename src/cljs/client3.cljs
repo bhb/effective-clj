@@ -16,9 +16,10 @@
     {:action :noop}))
 
 (comment
-  (price-req nil "2018-12-29" nil)
-  (price-req nil "2018-12-29" "googl")
-  (price-req "2018-12-28" "2018-12-29" "GOOGL")
+
+  (price-req nil "2018-12-29" nil) ; {:action :noop}
+  (price-req nil "2018-12-29" "googl") ; {:action :get, :url "http://localhost:3333/price", :params {:symbol "GOOGL", :date "2018-12-29"}}
+  (price-req "2018-12-28" "2018-12-29" "GOOGL") ; {:action :get, :url "http://localhost:3333/price", :params {:symbol "GOOGL", :date "2018-12-28"}}
 
   (let [req' (assoc (price-req "2018-12-28" "2018-12-29" "GOOGL")
                     :handler #(ok! (usd->num %)))]

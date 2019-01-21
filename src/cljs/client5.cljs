@@ -1,16 +1,16 @@
 (ns cljs.client5
   (:require
-    [cljs.client :refer [get-today! ok! fail! mean]]
-    [ajax.core :as http]
-    [clojure.string :as string]))
+   [cljs.client :refer [get-today! ok! fail! mean]]
+   [ajax.core :as http]
+   [clojure.string :as string]))
 
 (defn get-price! [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
-              {:handler cb
-               :error-handler eb
-               :params {:symbol (-> symbol string/upper-case string/trim)
-                        :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
+      {:handler cb
+       :error-handler eb
+       :params {:symbol (-> symbol string/upper-case string/trim)
+                :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
 
 (defn get-price+ [date symbol]
@@ -33,6 +33,6 @@
         (.catch eb))))
 
 (comment
-  (get-mean-price! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok! fail!)
+  (get-mean-price! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok!
 
-  )
+                   fail!))

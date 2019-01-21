@@ -1,9 +1,9 @@
 (ns cljs.client13
   (:require
-    [cljs.client :refer [get-today! ok! fail! mean]]
-    [ajax.core :as http]
-    [clojure.string :as string]
-    [cljs.reader :as reader]))
+   [cljs.client :refer [get-today! ok! fail! mean]]
+   [ajax.core :as http]
+   [clojure.string :as string]
+   [cljs.reader :as reader]))
 
 ;; use tools to improve readability
 

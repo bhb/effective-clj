@@ -30,7 +30,7 @@
 (defn get+ [url params]
   (js/Promise. (fn [resolve reject]
                  (http/GET url
-                           {:params params
+                   {:params params
                     :handler resolve
                     :error-handler reject}))))
 
@@ -41,10 +41,10 @@
 (defn get-price! [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
-              {:handler cb
-               :error-handler eb
-               :params {:symbol (-> symbol string/upper-case string/trim)
-                        :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
+      {:handler cb
+       :error-handler eb
+       :params {:symbol (-> symbol string/upper-case string/trim)
+                :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
 
 ;; TODO - maybe write get+ instead here

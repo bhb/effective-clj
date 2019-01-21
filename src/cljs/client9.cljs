@@ -1,17 +1,17 @@
 (ns cljs.client9
   (:require
-    [cljs.client :refer [get-today! ok! fail! mean get+]]
-    [ajax.core :as http]
-    [clojure.string :as string]
-    [cljs.reader :as reader]))
+   [cljs.client :refer [get-today! ok! fail! mean get+]]
+   [ajax.core :as http]
+   [clojure.string :as string]
+   [cljs.reader :as reader]))
 
 (defn get-price! [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
-              {:handler cb
-               :error-handler eb
-               :params {:symbol (-> symbol string/upper-case string/trim)
-                        :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
+      {:handler cb
+       :error-handler eb
+       :params {:symbol (-> symbol string/upper-case string/trim)
+                :date (-> (or date (get-today!)) string/trim (string/replace #"/" "-"))}})
     (cb nil)))
 
 (defn get-price+ [date symbol]
@@ -25,9 +25,7 @@
 (comment
   (-> (get+ "http://localhost:3333/dates-available" {:symbol "GOOGL"})
       (.then reader/read-string)
-      (.then ok!))
-
-  )
+      (.then ok!)))
 
 (defn get-prices+ [symbol dates]
   (let [ps (map #(get-price+ % symbol) dates)]

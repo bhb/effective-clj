@@ -1,9 +1,8 @@
 (ns cljs.client11
   (:require
-    [cljs.client :refer [get-today! ok! fail! mean]]
-    [ajax.core :as http]
-    [clojure.string :as string]
-    [cljs.reader :as reader]))
+   [ajax.core :as http]
+   [clojure.string :as string]
+   [cljs.reader :as reader]))
 
 ;; 2. extract pure functions
 

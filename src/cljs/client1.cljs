@@ -1,9 +1,27 @@
 (ns cljs.client1
   (:require
-    [devtools.core :as devtools]
-    [ajax.core :as http]))
+   [devtools.core :as devtools]
+   [ajax.core :as http]))
 
 (devtools/install!)
+
+(def !num (atom 1))
+
+(defn add-ten []
+  (let [x @!num
+        x' (+ x 10)]
+    (reset! !num x')))
+
+(comment
+  (add-ten)
+  @!num ; 11
+)
+
+(defn add-ten1 [x]
+  (+ x 10))
+
+(swap! !num add-ten1)
+@!num ; 11
 
 ;; Pure functions
 
@@ -34,15 +52,16 @@
 
 (defn get-price! []
   (http/GET "http://localhost:3333/price"
-            {:params {:symbol "GOOGL" :date "2018-12-28"}}))
+    {:params {:symbol "GOOGL" :date "2018-12-28"}}))
 
 (defn get-price []
   (fn []
     (http/GET "http://localhost:3333/price"
-            {:params {:symbol "GOOGL" :date "2018-12-28"}})))
+      {:params {:symbol "GOOGL" :date "2018-12-28"}})))
 
 (comment
+  (get-price!) ; prints: 1059.5
+
   (get-price) ; #object[Function]
 
-
-  )
+  ((get-price)))

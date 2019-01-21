@@ -27,26 +27,26 @@
 (defn get-price! [date symbol cb eb]
   (if symbol
     (http/GET "http://localhost:3333/price"
-              {:handler (fn [response]
-                          (-> response
-                              js/parseFloat
-                              cb))
-               :error-handler eb
-               :params {:symbol (-> symbol
-                                    string/upper-case
-                                    string/trim)
-                        :date (-> (or date (get-today!))
-                                  string/trim
-                                  (string/replace #"/" "-"))}})
+      {:handler (fn [response]
+                  (-> response
+                      js/parseFloat
+                      cb))
+       :error-handler eb
+       :params {:symbol (-> symbol
+                            string/upper-case
+                            string/trim)
+                :date (-> (or date (get-today!))
+                          string/trim
+                          (string/replace #"/" "-"))}})
     (cb nil)))
 
 (comment
   (get-price! "2018-12-28" "GOOGL" ok! fail!)
   (get-price! "2018/12/28" "GOOGL" ok! fail!)
 
+  (get-price! "2018-12-28" "GOOGL" println
 
-  (get-price! "2018-12-28" "GOOGL" println println)
-  )
+              println))
 
 
 

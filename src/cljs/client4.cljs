@@ -45,10 +45,9 @@
 (comment
   (get-prices! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" [] ok! fail!)
 
-  (get-mean-price! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok! fail!)
+  (get-mean-price! ["2018-12-26" "2018-12-27" "2018-12-28"] "GOOGL" ok!
 
-
-  )
+                   fail!))
 
 
 

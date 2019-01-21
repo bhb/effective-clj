@@ -1,10 +1,9 @@
 (ns cljs.client14
   (:require
-    [cljs.client :refer [get-today! ok! fail!]]
-    [ajax.core :as http]
-    [clojure.string :as string]
-    [cljs.reader :as reader]
-    [cognitect.transit :as t]))
+   [cljs.client :refer [get-today! ok! fail!]]
+   [ajax.core :as http]
+   [clojure.string :as string]
+   [cljs.reader :as reader]))
 
 ;; finally, consider if builing bigger requests
 
