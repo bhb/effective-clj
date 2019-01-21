@@ -4,7 +4,7 @@ Pure functions are the building blocks of idiomatic Clojure(Script) programs, si
 
 This talk explores techniques for writing effects in ClojureScript. We’ll look at how to separate effects from pure functions, discuss the tradeoffs of tools like callbacks, Promises, and core.async, and explore some strategies for simplifying sequences of effects.
 
-Bio: Ben has written code professionally for over a decade, working on projects ranging from IDEs, compilers, distributed test runners, code quality metrics, and web apps. After years of frustration with the verbosity of OOP (and a few production bugs related to mutable state), Ben switched to using Clojure professionally in 2015. His interests include data-driven programming and model-based testing. He currently works at Remix Labs, building native apps with ClojureScript and React Native.
+[Slides](https://goo.gl/YNRQkz)
 
 ## Usage
 
