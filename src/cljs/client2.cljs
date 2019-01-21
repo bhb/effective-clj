@@ -44,6 +44,8 @@
   (get-price! "2018-12-28" "GOOGL" ok! fail!)
   (get-price! "2018/12/28" "GOOGL" ok! fail!)
 
+
+  (get-price! "2018-12-28" "GOOGL" println println)
   )
 
 

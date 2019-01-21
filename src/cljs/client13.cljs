@@ -52,10 +52,18 @@
                    (http/GET url
                      {:params params
                       :handler resolve
+                      :error-handler reject})))))
+
+(defn get-no-fail+ [req]
+  (let [{:keys [url params]} req]
+    (js/Promise. (fn [resolve reject]
+                   (http/GET url
+                     {:params params
+                      :handler resolve
                       :error-handler resolve})))))
 
 (defn get-low-price! [name symbol cb eb]
-  (-> (get+ (symbol-req name))
+  (-> (get-no-fail+ (symbol-req name))
       (.then (fn [response]
                (let [looked-up-symbol (response->sym response)
                      req (dates-req looked-up-symbol symbol)]

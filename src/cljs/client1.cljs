@@ -1,6 +1,7 @@
 (ns cljs.client1
   (:require
-   [devtools.core :as devtools]))
+    [devtools.core :as devtools]
+    [ajax.core :as http]))
 
 (devtools/install!)
 
@@ -29,3 +30,19 @@
 
 (baz {} {})          ; {:total-keys 0}
 (baz {:x 1} {:y 2})  ; {:x 1, :y 2, :total-keys 2}
+
+
+(defn get-price! []
+  (http/GET "http://localhost:3333/price"
+            {:params {:symbol "GOOGL" :date "2018-12-28"}}))
+
+(defn get-price []
+  (fn []
+    (http/GET "http://localhost:3333/price"
+            {:params {:symbol "GOOGL" :date "2018-12-28"}})))
+
+(comment
+  (get-price) ; #object[Function]
+
+
+  )

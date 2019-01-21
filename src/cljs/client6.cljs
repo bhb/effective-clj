@@ -17,6 +17,11 @@
        (map #(price-req % nil symbol))
        (remove #(= :noop (:action %)))))
 
+(defn mean-price [prices-str]
+  (->> prices-str
+       (map js/parseFloat)
+       mean))
+
 (comment
   (price-reqs [] nil)
   (price-reqs ["2018-12-28"] nil)
@@ -33,8 +38,7 @@
   (let [reqs (price-reqs dates symbol)
         ps (map get-price+ reqs)]
     (-> (js/Promise.all ps)
-        (.then (fn [xs] (map js/parseFloat xs)))
-        (.then mean)
+        (.then mean-price)
         (.then cb)
         (.catch eb))))
 
