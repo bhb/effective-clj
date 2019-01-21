@@ -3,7 +3,8 @@
    [cljs.client :refer [get-today! ok! fail! mean]]
    [devtools.core :as devtools]
    [ajax.core :as http]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [cljs.test :refer [deftest is run-all-tests run-tests]]))
 
 (devtools/install!)
 
@@ -38,3 +39,42 @@
   (get-price! "2018-12-28" "GOOGL" ok! fail!)
   (get-price! "2018/12/28" "googl" ok! fail!)
   (get-price! "2018/12/28" nil ok! fail!))
+
+(deftest test-get-price
+  ;; noop
+  (get-price! "2018-12-25" nil
+              #(is (= nil %))
+              #(is false "should not get here"))
+
+  ;; normal GET
+  (with-redefs [http/GET (fn [url {:keys [handler]}]
+                           (handler "1012.12"))]
+    (get-price! "2018-12-25"
+                "GOOGL"
+                #(is (= 1012.12 %))
+                #(is false "should not get here"))))
+
+(deftest test-price-req
+  ;; noops if symbol
+  (is (= {:action :noop}
+         (price-req "2018-12-28" "2018-12-29" nil)))
+
+  ;; trims symbols
+  (is (= {:action :get,
+          :url "http://localhost:3333/price",
+          :params {:symbol "GOOGL", :date "2018-12-28"}}
+         (:params (price-req "2018-12-28" "2018-12-29" "  googl  "))))
+
+  ;; formats date
+  (is (= {:action :get,
+          :url "http://localhost:3333/price",
+          :params {:symbol "GOOGL", :date "2018-12-27"}}
+         (:params (price-req " 2018/12/27 " "2018-12-29" "  googl  "))))
+
+  ;; uses second date if first is not present
+  (is (= {:symbol "GOOGL", :date "2018-12-29"}
+         (:params (price-req nil "2018-12-29" "  googl  ")))))
+
+(run-tests 'cljs.client3)
+
+
